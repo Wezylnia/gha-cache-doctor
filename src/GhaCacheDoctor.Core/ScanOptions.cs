@@ -14,5 +14,7 @@ public enum OutputFormat
 {
     Text,
     Json,
+    Markdown,
+    GitHubAnnotations,
     GitHubSummary
 }

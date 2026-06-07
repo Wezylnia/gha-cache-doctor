@@ -86,6 +86,8 @@ public sealed class CliApplication
         format switch
         {
             OutputFormat.Json => new JsonReporter(),
+            OutputFormat.Markdown => new MarkdownReporter(),
+            OutputFormat.GitHubAnnotations => new GitHubAnnotationsReporter(),
             OutputFormat.GitHubSummary => new GitHubSummaryReporter(),
             _ => new TextReporter()
         };
@@ -100,7 +102,7 @@ public sealed class CliApplication
         Options:
           --repo <path>             Repository root. Defaults to current directory.
           --path <path>             Workflow file or directory. Defaults to .github/workflows.
-          --format <text|json|github-summary>
+          --format <text|json|markdown|github-summary|github-annotations>
                                     Output format. Defaults to text.
           --fail-on <none|info|warning|error>
           --include <ids>           Comma-separated rule IDs to include.
@@ -159,6 +161,20 @@ internal static class OutputFormatParser
             return true;
         }
 
+        if (value.Equals("github-annotations", StringComparison.OrdinalIgnoreCase) ||
+            value.Equals("githubannotations", StringComparison.OrdinalIgnoreCase) ||
+            value.Equals("annotations", StringComparison.OrdinalIgnoreCase))
+        {
+            format = OutputFormat.GitHubAnnotations;
+            return true;
+        }
+
+        if (value.Equals("md", StringComparison.OrdinalIgnoreCase))
+        {
+            format = OutputFormat.Markdown;
+            return true;
+        }
+
         return Enum.TryParse(value, true, out format);
     }
 }
@@ -207,7 +223,7 @@ internal static class ScanArguments
                 case "--format":
                     if (!TryReadValue(args, ref index, out var formatValue) || !OutputFormatParser.TryParse(formatValue, out format))
                     {
-                        return Error("--format must be text, json, or github-summary.");
+                        return Error("--format must be text, json, markdown, github-summary, or github-annotations.");
                     }
 
                     outputFormat = format;

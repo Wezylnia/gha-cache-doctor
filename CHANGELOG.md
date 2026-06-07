@@ -4,12 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The project follows preview releases until the first stable `1.0.0`.
 
-## Unreleased
+## 0.3.0 - 2026-06-07
 
 ### Added
 
+- Markdown report output through `--format markdown`.
+- GitHub workflow annotation output through `--format github-annotations`.
+- Official composite GitHub Action wrapper with job summary support.
 - `GHA-CACHE006` Gradle cache opportunity rule with docs, samples, and unit tests.
 - `GHA-CACHE007` setup-python pip cache rule with docs and unit tests.
+
+### Changed
+
+- Package version updated to `0.3.0`.
+- Test dependencies updated consistently across all test projects.
 
 ## 0.2.0 - 2026-06-05
 

@@ -4,9 +4,9 @@ This public status document tracks user-facing progress from the current MVP tow
 
 ## Current Version Target
 
-Current release: `0.2.0`
+Current release: `0.3.0`
 
-Goal: keep configuration support stable while preparing CI-native output for `v0.3.0`.
+Goal: keep CI-native output stable while preparing SARIF output for `v0.4.0`.
 
 ## Completed In v0.1.0
 
@@ -33,6 +33,16 @@ Goal: keep configuration support stable while preparing CI-native output for `v0
 - Document config examples.
 - Add config behavior tests.
 
+## Completed In v0.3.0
+
+- Add Markdown report output.
+- Add GitHub job summary output.
+- Add GitHub workflow annotation output.
+- Add official composite GitHub Action wrapper.
+- Add Gradle and setup-python pip cache opportunity rules.
+- Update test dependencies consistently across all test projects.
+- Document CI usage for the action and output formats.
+
 ## Repository Protection
 
 The repository is configured so public contribution should flow through pull requests:
@@ -51,12 +61,7 @@ The repository is configured so public contribution should flow through pull req
 
 ## Next Release
 
-The next milestone is `v0.3.0`, focused on:
-
-- GitHub annotation output,
-- official GitHub Action wrapper,
-- Markdown report output,
-- CI-focused documentation and tests.
+The next milestone is `v0.4.0`, focused on SARIF output and GitHub code scanning documentation.
 
 ## Validation Commands
 
@@ -67,4 +72,6 @@ dotnet test GhaCacheDoctor.slnx --configuration Release --no-build
 dotnet pack src/GhaCacheDoctor.Cli --configuration Release --no-build
 dotnet run --project src/GhaCacheDoctor.Cli -- scan --path samples/github-actions/bad --fail-on none
 dotnet run --project src/GhaCacheDoctor.Cli -- scan --path samples/github-actions/bad --format json --fail-on none
+dotnet run --project src/GhaCacheDoctor.Cli -- scan --path samples/github-actions/bad --format markdown --fail-on none
+dotnet run --project src/GhaCacheDoctor.Cli -- scan --path samples/github-actions/bad --format github-annotations --fail-on none
 ```

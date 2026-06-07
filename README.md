@@ -35,7 +35,7 @@ GitHub Actions caching looks simple, but cache configuration is easy to get wron
 
 ## Status
 
-Current release: `0.2.0`
+Current release: `0.3.0`
 
 The project is ready for local usage and public contribution. The CLI, parser, reporters, strict-mode behavior, initial rules, tests, sample workflows, and contributor docs are in place. See [docs/project-status.md](docs/project-status.md) and [docs/roadmap.md](docs/roadmap.md).
 
@@ -55,14 +55,14 @@ For local packaging:
 
 ```bash
 dotnet pack src/GhaCacheDoctor.Cli --configuration Release
-dotnet tool install --tool-path .tmp/tools gha-cache-doctor --version 0.2.0 --add-source src/GhaCacheDoctor.Cli/bin/Release
+dotnet tool install --tool-path .tmp/tools gha-cache-doctor --version 0.3.0 --add-source src/GhaCacheDoctor.Cli/bin/Release
 .tmp/tools/gha-cache-doctor scan --path samples/github-actions/bad --fail-on none
 ```
 
 After a public package is published:
 
 ```bash
-dotnet tool install --global gha-cache-doctor --version 0.2.0
+dotnet tool install --global gha-cache-doctor --version 0.3.0
 gha-cache-doctor scan
 ```
 
@@ -122,7 +122,7 @@ gha-cache-doctor scan [options]
 Options:
   --repo <path>             Repository root. Defaults to current directory.
   --path <path>             Workflow file or directory. Defaults to .github/workflows.
-  --format <text|json|github-summary>
+  --format <text|json|markdown|github-summary|github-annotations>
                             Output format. Defaults to text.
   --fail-on <none|info|warning|error>
   --include <ids>           Comma-separated rule IDs to include.
@@ -196,6 +196,14 @@ Use `--format github-summary` in GitHub Actions to write a concise Markdown repo
 
 The summary includes counts by severity, a findings table, and workflow parse errors when present.
 
+## Markdown And Annotation Output
+
+Use `--format markdown` for a portable Markdown report. Use `--format github-annotations` in GitHub Actions to emit workflow annotations:
+
+```bash
+gha-cache-doctor scan --format github-annotations --fail-on warning
+```
+
 ## GitHub Actions Usage
 
 ```yaml
@@ -203,11 +211,20 @@ The summary includes counts by severity, a findings table, and workflow parse er
   run: dotnet run --project src/GhaCacheDoctor.Cli -- scan --fail-on warning
 ```
 
+Official action wrapper:
+
+```yaml
+- uses: actions/checkout@v6
+- uses: Wezylnia/gha-cache-doctor@v0.3.0
+  with:
+    fail-on: warning
+```
+
 Once installed as a tool:
 
 ```yaml
 - name: Install gha-cache-doctor
-  run: dotnet tool install --global gha-cache-doctor --version 0.2.0
+  run: dotnet tool install --global gha-cache-doctor --version 0.3.0
 
 - name: Check cache configuration
   run: gha-cache-doctor scan --fail-on warning
@@ -251,6 +268,7 @@ Open contribution queues:
 
 - [Project status](docs/project-status.md)
 - [Roadmap](docs/roadmap.md)
+- [GitHub Action](docs/github-action.md)
 - [Release checklist](docs/release-checklist.md)
 - [Rule catalog](docs/rules/README.md)
 

@@ -77,6 +77,54 @@ public sealed class CliApplicationTests
     }
 
     [Fact]
+    public void ScanSupportsMarkdownOutput()
+    {
+        using var directory = new TempDirectory();
+        directory.Write(
+            ".github/workflows/ci.yml",
+            """
+            jobs:
+              test:
+                steps:
+                  - uses: actions/cache@v4
+                    with:
+                      path: ~/.npm
+                      key: npm-cache
+            """);
+        var output = new StringWriter();
+
+        var exitCode = new CliApplication(output, new StringWriter()).Run(["scan", "--repo", directory.Path, "--format", "markdown"]);
+
+        Assert.Equal(0, exitCode);
+        Assert.Contains("# gha-cache-doctor report", output.ToString());
+        Assert.Contains("GHA-CACHE003", output.ToString());
+    }
+
+    [Fact]
+    public void ScanSupportsGitHubAnnotationsOutput()
+    {
+        using var directory = new TempDirectory();
+        directory.Write(
+            ".github/workflows/ci.yml",
+            """
+            jobs:
+              test:
+                steps:
+                  - uses: actions/cache@v4
+                    with:
+                      path: ~/.npm
+                      key: npm-cache
+            """);
+        var output = new StringWriter();
+
+        var exitCode = new CliApplication(output, new StringWriter()).Run(["scan", "--repo", directory.Path, "--format", "github-annotations"]);
+
+        Assert.Equal(0, exitCode);
+        Assert.Contains("::warning", output.ToString());
+        Assert.Contains("GHA-CACHE003", output.ToString());
+    }
+
+    [Fact]
     public void ScanReturnsOneWhenFailOnWarningMatchesWarningFinding()
     {
         using var directory = new TempDirectory();

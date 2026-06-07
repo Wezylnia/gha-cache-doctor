@@ -6,8 +6,13 @@ public sealed class GitHubSummaryReporter : IReporter
 {
     public string Render(ScanResult result)
     {
+        return RenderMarkdown(result, "# gha-cache-doctor summary");
+    }
+
+    internal static string RenderMarkdown(ScanResult result, string title)
+    {
         var writer = new StringWriter();
-        writer.WriteLine("# gha-cache-doctor summary");
+        writer.WriteLine(title);
         writer.WriteLine();
 
         WriteSummary(writer, result);

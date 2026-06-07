@@ -1,0 +1,95 @@
+name: gha-cache-doctor
+description: Scan GitHub Actions workflows for cache misconfigurations and missed cache opportunities.
+author: Wezylnia
+
+branding:
+  icon: zap
+  color: blue
+
+inputs:
+  repo:
+    description: Repository root to inspect.
+    required: false
+    default: .
+  path:
+    description: Workflow file or directory to scan.
+    required: false
+    default: .github/workflows
+  format:
+    description: Output format. Use github-summary, github-annotations, markdown, json, or text.
+    required: false
+    default: github-summary
+  fail-on:
+    description: Minimum severity that fails the action. Use none, info, warning, or error.
+    required: false
+    default: warning
+  strict:
+    description: Enable stricter rule behavior.
+    required: false
+    default: "false"
+  config:
+    description: Config file path, or none to disable config loading.
+    required: false
+    default: ""
+  include:
+    description: Comma-separated rule IDs to include.
+    required: false
+    default: ""
+  exclude:
+    description: Comma-separated rule IDs to exclude.
+    required: false
+    default: ""
+  dotnet-version:
+    description: .NET SDK version used to run the action.
+    required: false
+    default: 10.0.x
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: ${{ inputs.dotnet-version }}
+
+    - name: Run gha-cache-doctor
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        args=(
+          scan
+          --repo "${{ inputs.repo }}"
+          --path "${{ inputs.path }}"
+          --format "${{ inputs.format }}"
+          --fail-on "${{ inputs.fail-on }}"
+        )
+
+        if [[ "${{ inputs.strict }}" == "true" ]]; then
+          args+=(--strict)
+        fi
+
+        if [[ -n "${{ inputs.config }}" ]]; then
+          args+=(--config "${{ inputs.config }}")
+        fi
+
+        if [[ -n "${{ inputs.include }}" ]]; then
+          args+=(--include "${{ inputs.include }}")
+        fi
+
+        if [[ -n "${{ inputs.exclude }}" ]]; then
+          args+=(--exclude "${{ inputs.exclude }}")
+        fi
+
+        output_file="${RUNNER_TEMP}/gha-cache-doctor-output.txt"
+        set +e
+        dotnet run --project "${GITHUB_ACTION_PATH}/src/GhaCacheDoctor.Cli" -- "${args[@]}" > "${output_file}"
+        exit_code=$?
+        set -e
+
+        cat "${output_file}"
+
+        if [[ "${{ inputs.format }}" == "github-summary" && -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+          cat "${output_file}" >> "${GITHUB_STEP_SUMMARY}"
+        fi
+
+        exit "${exit_code}"

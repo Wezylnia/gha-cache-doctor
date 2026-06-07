@@ -37,7 +37,7 @@ Focus: configuration support.
 - Document config examples for monorepos and mixed package managers.
 - Add tests for config precedence with `--include`, `--exclude`, and `--strict`.
 
-## v0.3.0
+## v0.3.0 - shipped
 
 Focus: CI integration.
 

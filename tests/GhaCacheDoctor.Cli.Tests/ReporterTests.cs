@@ -166,4 +166,39 @@ public sealed class ReporterTests
         Assert.Contains("## Parse errors", output);
         Assert.Contains("| .github/workflows/bad.yml:3 | Invalid \\| YAML |", output);
     }
+
+    [Fact]
+    public void MarkdownReporterUsesReportTitle()
+    {
+        var result = new ScanResult([], []);
+
+        var output = new MarkdownReporter().Render(result);
+
+        Assert.Contains("# gha-cache-doctor report", output);
+        Assert.Contains("No cache issues found.", output);
+    }
+
+    [Fact]
+    public void GitHubAnnotationsReporterEscapesWorkflowCommands()
+    {
+        var result = new ScanResult([
+            new Finding(
+                "GHA-CACHE003",
+                Severity.Warning,
+                "correctness",
+                "Weak cache key, missing 100% lockfile.",
+                "Use hashFiles.\nKeep restore keys scoped.",
+                ".github/workflows/ci:test.yml",
+                8,
+                "test",
+                "Cache npm")
+        ], [
+            new WorkflowParseError(".github/workflows/bad.yml", 3, "Invalid | YAML")
+        ]);
+
+        var output = new GitHubAnnotationsReporter().Render(result);
+
+        Assert.Contains("::warning file=.github/workflows/ci%3Atest.yml,title=GHA-CACHE003 correctness,line=8::Weak cache key, missing 100%25 lockfile. Recommendation: Use hashFiles.%0AKeep restore keys scoped.", output);
+        Assert.Contains("::error file=.github/workflows/bad.yml,title=parse-error,line=3::Invalid | YAML", output);
+    }
 }
