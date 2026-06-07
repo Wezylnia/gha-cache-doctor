@@ -804,6 +804,101 @@ public sealed class CacheRuleTests
         Assert.Empty(findings);
     }
 
+    [Fact]
+    public void SetupPythonPackageCacheMissingReportsPoetryInstallWithoutCache()
+    {
+        var workflow = Workflow([
+            new("Setup Python", "actions/setup-python@v5", null, new Dictionary<string, string>(), 5),
+            new("Install", null, "poetry install", new Dictionary<string, string>(), 12)
+        ]);
+
+        var finding = Assert.Single(new SetupPythonPackageCacheMissingRule().Analyze(workflow, Repository(lockFiles: ["poetry.lock"])));
+
+        Assert.Equal("GHA-CACHE010", finding.RuleId);
+        Assert.Contains("cache: poetry", finding.Recommendation);
+    }
+
+    [Fact]
+    public void SetupPythonPackageCacheMissingAllowsPoetryCache()
+    {
+        var workflow = Workflow([
+            new("Setup Python", "actions/setup-python@v5", null, new Dictionary<string, string> { ["cache"] = "poetry" }, 5),
+            new("Install", null, "poetry install", new Dictionary<string, string>(), 12)
+        ]);
+
+        var findings = new SetupPythonPackageCacheMissingRule().Analyze(workflow, Repository(lockFiles: ["poetry.lock"]));
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public void SetupPythonPackageCacheMissingReportsPipenvInstallWithoutCache()
+    {
+        var workflow = Workflow([
+            new("Setup Python", "actions/setup-python@v5", null, new Dictionary<string, string>(), 5),
+            new("Install", null, "pipenv install --deploy", new Dictionary<string, string>(), 12)
+        ]);
+
+        var finding = Assert.Single(new SetupPythonPackageCacheMissingRule().Analyze(workflow, Repository(lockFiles: ["Pipfile.lock"])));
+
+        Assert.Equal("GHA-CACHE010", finding.RuleId);
+        Assert.Contains("cache: pipenv", finding.Recommendation);
+    }
+
+    [Fact]
+    public void SetupPythonPackageCacheMissingAllowsPipenvCache()
+    {
+        var workflow = Workflow([
+            new("Setup Python", "actions/setup-python@v5", null, new Dictionary<string, string> { ["cache"] = "pipenv" }, 5),
+            new("Install", null, "pipenv install", new Dictionary<string, string>(), 12)
+        ]);
+
+        var findings = new SetupPythonPackageCacheMissingRule().Analyze(workflow, Repository(lockFiles: ["Pipfile.lock"]));
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public void SetupPythonPackageCacheMissingReportsWrongCacheForPoetry()
+    {
+        var workflow = Workflow([
+            new("Setup Python", "actions/setup-python@v5", null, new Dictionary<string, string> { ["cache"] = "pip" }, 5),
+            new("Install", null, "poetry install", new Dictionary<string, string>(), 12)
+        ]);
+
+        var finding = Assert.Single(new SetupPythonPackageCacheMissingRule().Analyze(workflow, Repository(lockFiles: ["poetry.lock"])));
+
+        Assert.Equal("GHA-CACHE010", finding.RuleId);
+        Assert.Contains("cache: poetry", finding.Recommendation);
+    }
+
+    [Fact]
+    public void SetupPythonPackageCacheMissingReportsWrongCacheForPipenv()
+    {
+        var workflow = Workflow([
+            new("Setup Python", "actions/setup-python@v5", null, new Dictionary<string, string> { ["cache"] = "pip" }, 5),
+            new("Install", null, "pipenv install", new Dictionary<string, string>(), 12)
+        ]);
+
+        var finding = Assert.Single(new SetupPythonPackageCacheMissingRule().Analyze(workflow, Repository(lockFiles: ["Pipfile.lock"])));
+
+        Assert.Equal("GHA-CACHE010", finding.RuleId);
+        Assert.Contains("cache: pipenv", finding.Recommendation);
+    }
+
+    [Fact]
+    public void SetupPythonPackageCacheMissingDoesNotReportWithoutPythonHints()
+    {
+        var workflow = Workflow([
+            new("Setup Python", "actions/setup-python@v5", null, new Dictionary<string, string>(), 5),
+            new("Install", null, "poetry install", new Dictionary<string, string>(), 12)
+        ]);
+
+        var findings = new SetupPythonPackageCacheMissingRule().Analyze(workflow, Repository());
+
+        Assert.Empty(findings);
+    }
+
     private static WorkflowDocument Workflow(IReadOnlyList<WorkflowStep> steps) =>
         new("ci.yml", "CI", [new WorkflowJob("test", null, steps)]);
 

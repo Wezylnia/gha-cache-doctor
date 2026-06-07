@@ -13,6 +13,7 @@
 | [`GHA-CACHE007`](GHA-CACHE007-setup-python-pip-cache-missing.md) | Detects `actions/setup-python` without pip dependency caching when Python installs are present. |
 | [`GHA-CACHE008`](GHA-CACHE008-dotnet-cache-missing.md) | Detects .NET NuGet restore commands without configured NuGet package caching. |
 | [`GHA-CACHE009`](GHA-CACHE009-docker-buildkit-cache-missing.md) | Detects `docker/build-push-action` and `docker buildx build` without BuildKit layer caching. |
+| [`GHA-CACHE010`](GHA-CACHE010-setup-python-package-cache-missing.md) | Detects `actions/setup-python` with Poetry or Pipenv installs but without the matching cache type. |
 
 New rules should include focused tests, a rule document, and a README table update.
 

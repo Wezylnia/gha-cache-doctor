@@ -13,6 +13,7 @@ internal static class RuleTitles
         "GHA-CACHE007" => "setup-python-pip-cache-missing",
         "GHA-CACHE008" => "dotnet-cache-missing",
         "GHA-CACHE009" => "docker-buildkit-cache-missing",
+        "GHA-CACHE010" => "setup-python-package-cache-missing",
         "GHA-CACHE-PARSE" => "workflow-parse-error",
         _ => "cache-rule"
     };
