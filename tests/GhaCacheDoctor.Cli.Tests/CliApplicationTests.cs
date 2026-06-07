@@ -101,6 +101,30 @@ public sealed class CliApplicationTests
     }
 
     [Fact]
+    public void ScanSupportsSarifOutput()
+    {
+        using var directory = new TempDirectory();
+        directory.Write(
+            ".github/workflows/ci.yml",
+            """
+            jobs:
+              test:
+                steps:
+                  - uses: actions/cache@v4
+                    with:
+                      path: ~/.npm
+                      key: npm-cache
+            """);
+        var output = new StringWriter();
+
+        var exitCode = new CliApplication(output, new StringWriter()).Run(["scan", "--repo", directory.Path, "--format", "sarif"]);
+
+        Assert.Equal(0, exitCode);
+        Assert.Contains("\"version\": \"2.1.0\"", output.ToString());
+        Assert.Contains("GHA-CACHE003", output.ToString());
+    }
+
+    [Fact]
     public void ScanSupportsGitHubAnnotationsOutput()
     {
         using var directory = new TempDirectory();
@@ -272,6 +296,34 @@ public sealed class CliApplicationTests
         Assert.Equal(0, exitCode);
         Assert.Contains("# gha-cache-doctor summary", output.ToString());
         Assert.Contains("GHA-CACHE003", output.ToString());
+    }
+
+    [Fact]
+    public void ScanLoadsSarifFormatFromConfigFile()
+    {
+        using var directory = new TempDirectory();
+        directory.Write(
+            ".gha-cache-doctor.yml",
+            """
+            format: sarif
+            """);
+        directory.Write(
+            ".github/workflows/ci.yml",
+            """
+            jobs:
+              test:
+                steps:
+                  - uses: actions/cache@v4
+                    with:
+                      path: ~/.npm
+                      key: npm-cache
+            """);
+        var output = new StringWriter();
+
+        var exitCode = new CliApplication(output, new StringWriter()).Run(["scan", "--repo", directory.Path]);
+
+        Assert.Equal(0, exitCode);
+        Assert.Contains("\"version\": \"2.1.0\"", output.ToString());
     }
 
     [Fact]

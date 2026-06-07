@@ -45,7 +45,7 @@ Focus: CI integration.
 - Add official GitHub Action wrapper.
 - Add Markdown report output.
 
-## v0.4.0
+## v0.4.0 - shipped
 
 Focus: SARIF output.
 

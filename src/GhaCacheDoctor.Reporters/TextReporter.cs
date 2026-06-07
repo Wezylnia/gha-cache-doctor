@@ -19,7 +19,7 @@ public sealed class TextReporter : IReporter
 
             foreach (var finding in group)
             {
-                writer.WriteLine($"[{finding.Severity.ToString().ToLowerInvariant()}] {finding.RuleId} {RuleTitle(finding.RuleId)}");
+                writer.WriteLine($"[{finding.Severity.ToString().ToLowerInvariant()}] {finding.RuleId} {RuleTitles.Get(finding.RuleId)}");
                 if (!string.IsNullOrWhiteSpace(finding.JobId))
                 {
                     writer.WriteLine($"Job: {finding.JobId}");
@@ -59,16 +59,4 @@ public sealed class TextReporter : IReporter
 
         return writer.ToString();
     }
-
-    private static string RuleTitle(string ruleId) => ruleId switch
-    {
-        "GHA-CACHE001" => "setup-node-cache-missing",
-        "GHA-CACHE002" => "setup-node-cache-dependency-path-missing",
-        "GHA-CACHE003" => "actions-cache-key-missing-lockfile-hash",
-        "GHA-CACHE004" => "restore-keys-too-broad",
-        "GHA-CACHE005" => "install-step-without-cache",
-        "GHA-CACHE006" => "gradle-cache-missing",
-        "GHA-CACHE007" => "setup-python-pip-cache-missing",
-        _ => "cache-rule"
-    };
 }

@@ -15,6 +15,7 @@ public enum OutputFormat
     Text,
     Json,
     Markdown,
+    Sarif,
     GitHubAnnotations,
     GitHubSummary
 }

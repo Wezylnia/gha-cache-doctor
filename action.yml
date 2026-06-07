@@ -16,7 +16,7 @@ inputs:
     required: false
     default: .github/workflows
   format:
-    description: Output format. Use github-summary, github-annotations, markdown, json, or text.
+    description: Output format. Use github-summary, github-annotations, markdown, sarif, json, or text.
     required: false
     default: github-summary
   fail-on:
@@ -43,6 +43,10 @@ inputs:
     description: .NET SDK version used to run the action.
     required: false
     default: 10.0.x
+  output:
+    description: Optional file path where the scanner output should be written.
+    required: false
+    default: ""
 
 runs:
   using: composite
@@ -87,6 +91,11 @@ runs:
         set -e
 
         cat "${output_file}"
+
+        if [[ -n "${{ inputs.output }}" ]]; then
+          mkdir -p "$(dirname "${{ inputs.output }}")"
+          cp "${output_file}" "${{ inputs.output }}"
+        fi
 
         if [[ "${{ inputs.format }}" == "github-summary" && -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
           cat "${output_file}" >> "${GITHUB_STEP_SUMMARY}"

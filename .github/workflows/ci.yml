@@ -34,4 +34,6 @@ jobs:
 
       - run: dotnet run --project src/GhaCacheDoctor.Cli -- scan --path samples/github-actions/bad --format markdown --fail-on none
 
+      - run: dotnet run --project src/GhaCacheDoctor.Cli -- scan --path samples/github-actions/bad --format sarif --fail-on none
+
       - run: dotnet run --project src/GhaCacheDoctor.Cli -- scan --path samples/github-actions/bad --format github-annotations --fail-on none

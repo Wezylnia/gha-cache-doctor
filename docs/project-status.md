@@ -4,9 +4,9 @@ This public status document tracks user-facing progress from the current MVP tow
 
 ## Current Version Target
 
-Current release: `0.3.0`
+Current release: `0.4.0`
 
-Goal: keep CI-native output stable while preparing SARIF output for `v0.4.0`.
+Goal: keep SARIF and CI-native output stable while preparing broader cache coverage for `v0.5.0`.
 
 ## Completed In v0.1.0
 
@@ -43,6 +43,14 @@ Goal: keep CI-native output stable while preparing SARIF output for `v0.4.0`.
 - Update test dependencies consistently across all test projects.
 - Document CI usage for the action and output formats.
 
+## Completed In v0.4.0
+
+- Add SARIF 2.1.0 output.
+- Add SARIF rule metadata, source locations, and parser error results.
+- Add GitHub code scanning documentation.
+- Add action `output` support for file-based workflows.
+- Clean up README release/license metadata.
+
 ## Repository Protection
 
 The repository is configured so public contribution should flow through pull requests:
@@ -61,7 +69,7 @@ The repository is configured so public contribution should flow through pull req
 
 ## Next Release
 
-The next milestone is `v0.4.0`, focused on SARIF output and GitHub code scanning documentation.
+The next milestone is `v0.5.0`, focused on broader cache coverage.
 
 ## Validation Commands
 
@@ -73,5 +81,6 @@ dotnet pack src/GhaCacheDoctor.Cli --configuration Release --no-build
 dotnet run --project src/GhaCacheDoctor.Cli -- scan --path samples/github-actions/bad --fail-on none
 dotnet run --project src/GhaCacheDoctor.Cli -- scan --path samples/github-actions/bad --format json --fail-on none
 dotnet run --project src/GhaCacheDoctor.Cli -- scan --path samples/github-actions/bad --format markdown --fail-on none
+dotnet run --project src/GhaCacheDoctor.Cli -- scan --path samples/github-actions/bad --format sarif --fail-on none
 dotnet run --project src/GhaCacheDoctor.Cli -- scan --path samples/github-actions/bad --format github-annotations --fail-on none
 ```

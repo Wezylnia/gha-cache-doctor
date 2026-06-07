@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The project follows preview releases until the first stable `1.0.0`.
 
+## 0.4.0 - 2026-06-07
+
+### Added
+
+- SARIF 2.1.0 output through `--format sarif`.
+- SARIF rule metadata, source locations, and parser error results.
+- Code scanning documentation for GitHub Actions SARIF upload.
+- `output` support in the composite action for SARIF and other file-based workflows.
+
+### Changed
+
+- Package version updated to `0.4.0`.
+- README header and release metadata presentation cleaned up.
+
 ## 0.3.0 - 2026-06-07
 
 ### Added
@@ -68,7 +82,7 @@ The project follows preview releases until the first stable `1.0.0`.
 - Rule documentation.
 - Unit tests for parser, repository context, rules, CLI, and reporters.
 
-### Known Gaps
+### Known Gaps At 0.1.0
 
 - SARIF output is not implemented yet.
 - GitHub annotation output is not implemented yet.

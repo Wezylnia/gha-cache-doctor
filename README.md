@@ -1,10 +1,12 @@
 # gha-cache-doctor
 
-[![CI](https://github.com/Wezylnia/gha-cache-doctor/actions/workflows/ci.yml/badge.svg)](https://github.com/Wezylnia/gha-cache-doctor/actions/workflows/ci.yml)
-[![GitHub release](https://img.shields.io/github/v/release/Wezylnia/gha-cache-doctor?include_prereleases)](https://github.com/Wezylnia/gha-cache-doctor/releases)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-
 A focused .NET CLI that scans GitHub Actions workflows for cache misconfigurations, weak cache keys, and missed dependency-cache opportunities.
+
+[![CI](https://github.com/Wezylnia/gha-cache-doctor/actions/workflows/ci.yml/badge.svg)](https://github.com/Wezylnia/gha-cache-doctor/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/Wezylnia/gha-cache-doctor?include_prereleases&label=release)](https://github.com/Wezylnia/gha-cache-doctor/releases)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+Current release: `0.4.0` · License: MIT · Target framework: .NET 10
 
 `gha-cache-doctor` is a polished MVP and intentionally small. If you like CI/CD tooling, static analysis, or shaving minutes off slow pipelines, there are good first issues ready for contributors.
 
@@ -35,7 +37,7 @@ GitHub Actions caching looks simple, but cache configuration is easy to get wron
 
 ## Status
 
-Current release: `0.3.0`
+Current release: `0.4.0`
 
 The project is ready for local usage and public contribution. The CLI, parser, reporters, strict-mode behavior, initial rules, tests, sample workflows, and contributor docs are in place. See [docs/project-status.md](docs/project-status.md) and [docs/roadmap.md](docs/roadmap.md).
 
@@ -55,14 +57,14 @@ For local packaging:
 
 ```bash
 dotnet pack src/GhaCacheDoctor.Cli --configuration Release
-dotnet tool install --tool-path .tmp/tools gha-cache-doctor --version 0.3.0 --add-source src/GhaCacheDoctor.Cli/bin/Release
+dotnet tool install --tool-path .tmp/tools gha-cache-doctor --version 0.4.0 --add-source src/GhaCacheDoctor.Cli/bin/Release
 .tmp/tools/gha-cache-doctor scan --path samples/github-actions/bad --fail-on none
 ```
 
 After a public package is published:
 
 ```bash
-dotnet tool install --global gha-cache-doctor --version 0.3.0
+dotnet tool install --global gha-cache-doctor --version 0.4.0
 gha-cache-doctor scan
 ```
 
@@ -122,7 +124,7 @@ gha-cache-doctor scan [options]
 Options:
   --repo <path>             Repository root. Defaults to current directory.
   --path <path>             Workflow file or directory. Defaults to .github/workflows.
-  --format <text|json|markdown|github-summary|github-annotations>
+  --format <text|json|markdown|sarif|github-summary|github-annotations>
                             Output format. Defaults to text.
   --fail-on <none|info|warning|error>
   --include <ids>           Comma-separated rule IDs to include.
@@ -204,6 +206,16 @@ Use `--format markdown` for a portable Markdown report. Use `--format github-ann
 gha-cache-doctor scan --format github-annotations --fail-on warning
 ```
 
+## SARIF And Code Scanning
+
+Use `--format sarif` to produce SARIF 2.1.0 output for GitHub code scanning:
+
+```bash
+gha-cache-doctor scan --format sarif --fail-on none > gha-cache-doctor.sarif
+```
+
+See [Code scanning](docs/code-scanning.md) for a complete GitHub Actions workflow.
+
 ## GitHub Actions Usage
 
 ```yaml
@@ -215,7 +227,7 @@ Official action wrapper:
 
 ```yaml
 - uses: actions/checkout@v6
-- uses: Wezylnia/gha-cache-doctor@v0.3.0
+- uses: Wezylnia/gha-cache-doctor@v0.4.0
   with:
     fail-on: warning
 ```
@@ -224,7 +236,7 @@ Once installed as a tool:
 
 ```yaml
 - name: Install gha-cache-doctor
-  run: dotnet tool install --global gha-cache-doctor --version 0.3.0
+  run: dotnet tool install --global gha-cache-doctor --version 0.4.0
 
 - name: Check cache configuration
   run: gha-cache-doctor scan --fail-on warning
@@ -252,7 +264,7 @@ Good contribution paths:
 
 - Add a cache rule for a package manager you use.
 - Improve monorepo detection and recommendations.
-- Add reporter output such as SARIF or GitHub annotations.
+- Improve SARIF, Markdown, JSON, or GitHub-native reporter output.
 - Add parser or false-positive tests from real workflows.
 - Improve docs with before/after workflow examples.
 
@@ -269,6 +281,7 @@ Open contribution queues:
 - [Project status](docs/project-status.md)
 - [Roadmap](docs/roadmap.md)
 - [GitHub Action](docs/github-action.md)
+- [Code scanning](docs/code-scanning.md)
 - [Release checklist](docs/release-checklist.md)
 - [Rule catalog](docs/rules/README.md)
 

@@ -130,6 +130,41 @@ public sealed class ReporterTests
     }
 
     [Fact]
+    public void SarifReporterIncludesRulesResultsAndParseErrors()
+    {
+        var result = new ScanResult([
+            new Finding(
+                "GHA-CACHE003",
+                Severity.Warning,
+                "correctness",
+                "Weak cache key.",
+                "Use hashFiles.",
+                ".github/workflows/ci.yml",
+                8,
+                "test",
+                "Cache npm")
+        ], [
+            new WorkflowParseError(".github/workflows/bad.yml", 3, "Invalid YAML")
+        ]);
+
+        var output = new SarifReporter().Render(result);
+        using var document = JsonDocument.Parse(output);
+        var run = document.RootElement.GetProperty("runs")[0];
+        var rules = run.GetProperty("tool").GetProperty("driver").GetProperty("rules");
+        var cacheRule = rules.EnumerateArray().Single(rule => rule.GetProperty("id").GetString() == "GHA-CACHE003");
+        var parseRule = rules.EnumerateArray().Single(rule => rule.GetProperty("id").GetString() == "GHA-CACHE-PARSE");
+        var results = run.GetProperty("results");
+
+        Assert.Equal("2.1.0", document.RootElement.GetProperty("version").GetString());
+        Assert.Equal("https://json.schemastore.org/sarif-2.1.0.json", document.RootElement.GetProperty("$schema").GetString());
+        Assert.Equal("actions-cache-key-missing-lockfile-hash", cacheRule.GetProperty("name").GetString());
+        Assert.Equal("workflow-parse-error", parseRule.GetProperty("name").GetString());
+        Assert.Equal("warning", results[0].GetProperty("level").GetString());
+        Assert.Equal(".github/workflows/ci.yml", results[0].GetProperty("locations")[0].GetProperty("physicalLocation").GetProperty("artifactLocation").GetProperty("uri").GetString());
+        Assert.Equal("GHA-CACHE-PARSE", results[1].GetProperty("ruleId").GetString());
+    }
+
+    [Fact]
     public void GitHubSummaryReporterReturnsMarkdownForEmptyResult()
     {
         var result = new ScanResult([], []);
