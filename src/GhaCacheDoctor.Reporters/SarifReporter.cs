@@ -74,6 +74,11 @@ public sealed class SarifReporter : IReporter
                 }
             }
         },
+        partialFingerprints = new Dictionary<string, string>
+        {
+            ["primaryLocationLineHash"] = ComputeLineHash(finding),
+            ["ghaCacheDoctorFingerprint"] = BaselineEntry.ComputeFingerprint(finding)
+        },
         properties = new
         {
             category = finding.Category,
@@ -81,6 +86,14 @@ public sealed class SarifReporter : IReporter
             stepName = finding.StepName
         }
     };
+
+    private static string ComputeLineHash(Finding finding)
+    {
+        var input = $"{finding.FilePath}:{finding.Line ?? 0}";
+        var hash = System.Security.Cryptography.SHA256.HashData(
+            System.Text.Encoding.UTF8.GetBytes(input));
+        return Convert.ToHexStringLower(hash);
+    }
 
     private static object ToParseErrorResult(WorkflowParseError parseError) => new
     {
