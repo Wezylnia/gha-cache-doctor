@@ -53,7 +53,7 @@ Focus: SARIF output.
 - Include rule metadata and source locations.
 - Document GitHub code scanning usage.
 
-## v0.5.0
+## v0.5.0 - shipped
 
 Focus: broader cache coverage.
 

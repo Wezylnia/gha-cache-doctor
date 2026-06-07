@@ -4,9 +4,15 @@ This public status document tracks user-facing progress from the current MVP tow
 
 ## Current Version Target
 
-Current release: `0.4.0`
+Current release: `0.5.0`
 
-Goal: keep SARIF and CI-native output stable while preparing broader cache coverage for `v0.5.0`.
+Goal: keep .NET and Docker cache coverage stable while preparing monorepo precision for `v0.6.0`.
+
+## Completed In v0.5.0
+
+- Add `GHA-CACHE008` dotnet-cache-missing rule.
+- Add `GHA-CACHE009` docker-buildkit-cache-missing rule.
+- Add rule docs, samples, and unit tests for each new rule.
 
 ## Completed In v0.1.0
 
@@ -69,7 +75,7 @@ The repository is configured so public contribution should flow through pull req
 
 ## Next Release
 
-The next milestone is `v0.5.0`, focused on broader cache coverage.
+The next milestone is `v0.6.0`, focused on monorepo precision and package-manager-aware cache path guidance.
 
 ## Validation Commands
 

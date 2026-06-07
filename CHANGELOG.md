@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The project follows preview releases until the first stable `1.0.0`.
 
+## 0.5.0 - 2026-06-07
+
+### Added
+
+- `GHA-CACHE008` dotnet-cache-missing rule: detects .NET NuGet restore commands without configured NuGet package caching.
+- `GHA-CACHE009` docker-buildkit-cache-missing rule: detects `docker/build-push-action` and `docker buildx build` without BuildKit layer caching.
+
+### Changed
+
+- Package version updated to `0.5.0`.
+
 ## 0.4.0 - 2026-06-07
 
 ### Added
