@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The project follows preview releases until the first stable `1.0.0`.
 
+## 1.0.0 - 2026-06-07
+
+### Added
+
+- Stable release documentation and validation coverage.
+- v1 contract tests for JSON, SARIF, baseline, suppression, and CLI exit code behavior.
+
+### Changed
+
+- Package version updated to `1.0.0`.
+- Stabilized documented CLI, cache rule, JSON, SARIF, configuration, baseline, suppression, and reporter behavior for public CI usage.
+- Suppression source names now use `inline-file`, `inline-next-line`, and `baseline` consistently.
+
+### Fixed
+
+- Corrected stale installation, action usage, release checklist, and project status documentation from preview releases.
+
 ## 0.9.0 - 2026-06-07
 
 ### Added

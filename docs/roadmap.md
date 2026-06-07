@@ -76,7 +76,31 @@ Focus: adoption controls.
 - Add baseline generation.
 - Add inline suppression comments.
 
-## v1.0.0
+## v0.8.0 - shipped
+
+Focus: adoption hardening.
+
+- Add stable SHA-256 baseline fingerprints.
+- Add `--prune-baseline` for stale entry removal.
+- Add `--show-suppressions` for visibility into suppressed findings.
+
+## v0.9.0 - shipped
+
+Focus: cache coverage and v1 readiness.
+
+- Add Go, Cargo, and Maven cache rules (GHA-CACHE011-013).
+- Add SARIF `partialFingerprints`.
+- Add machine-readable JSON schemas.
+
+## v1.0.0 - shipped
+
+Focus: first stable public release.
+
+- Stabilize CLI, JSON, SARIF, configuration, baseline, and suppression behavior.
+- Lock down v1 contract tests.
+- Refresh documentation and project metadata for stable release.
+
+## After v1.0
 
 Focus: stable public release.
 

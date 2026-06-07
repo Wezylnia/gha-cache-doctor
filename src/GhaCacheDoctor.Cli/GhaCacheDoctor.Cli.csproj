@@ -15,7 +15,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <AssemblyName>gha-cache-doctor</AssemblyName>
     <PackageId>gha-cache-doctor</PackageId>
-    <Version>0.9.0</Version>
+    <Version>1.0.0</Version>
+    <PackageReleaseNotes>v1.0.0 is the first stable release, locking down CLI behavior, cache rule coverage, JSON/SARIF output, configuration, baseline and suppression workflows, documentation, and CI validation.</PackageReleaseNotes>
     <Authors>Wezylnia</Authors>
     <Description>A focused CLI that scans GitHub Actions workflows for cache misconfigurations and missed cache opportunities.</Description>
     <PackageTags>github-actions;cache;ci-cd;devops;cli;dotnet;static-analysis</PackageTags>

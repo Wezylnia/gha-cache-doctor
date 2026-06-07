@@ -4,11 +4,37 @@ This public status document tracks user-facing progress from the current MVP tow
 
 ## Current Version Target
 
-Current release: `0.7.0`
+Current release: `1.0.0`
 
-Goal: keep baselines and suppression controls stable while preparing for v1.0.0.
+Goal: first stable release. All documented CLI, JSON, SARIF, configuration, baseline, suppression, and cache rule behavior is locked down.
 
-## Completed In v0.5.0
+## Completed In v1.0.0
+
+- Lock down v1 stable contract tests for JSON, SARIF, baseline prune, inline suppression, and CLI exit codes.
+- Stabilize suppression source names (`inline-file`, `inline-next-line`, `baseline`).
+- Refresh all documentation, project status, roadmap, package metadata, and install examples.
+
+## Completed In v0.9.0
+
+- Add `GHA-CACHE011` go-cache-missing, `GHA-CACHE012` cargo-cache-missing, `GHA-CACHE013` maven-cache-missing rules.
+- Add SARIF `partialFingerprints`.
+- Add machine-readable JSON schemas.
+
+## Completed In v0.8.0
+
+- Add stable SHA-256 baseline fingerprints.
+- Add `--prune-baseline` mode.
+- Add `--show-suppressions` and `SuppressedFinding` model.
+
+## Completed In v0.7.0
+
+- Add baseline suppression, generation, and inline suppression comments.
+
+## Completed In v0.6.0
+
+- Improve workspace context detection (`.yarnrc.yml`, `.yarn/cache`, `Directory.Packages.props`).
+- Strengthen monorepo cache dependency path recommendations.
+- Add `GHA-CACHE010` setup-python-package-cache-missing rule.
 
 - Add `GHA-CACHE008` dotnet-cache-missing rule.
 - Add `GHA-CACHE009` docker-buildkit-cache-missing rule.
@@ -75,7 +101,7 @@ The repository is configured so public contribution should flow through pull req
 
 ## Next Release
 
-The next milestone is `v1.0.0`, the stable public release.
+Future releases will add non-breaking improvements while keeping the v1.0 public API stable.
 
 ## Validation Commands
 
