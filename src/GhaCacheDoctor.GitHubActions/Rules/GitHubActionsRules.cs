@@ -13,6 +13,7 @@ public static class GitHubActionsRules
         new InstallStepWithoutCacheRule(),
         new GradleCacheMissingRule(),
         new SetupPythonPipCacheMissingRule(),
-        new DotNetCacheMissingRule()
+        new DotNetCacheMissingRule(),
+        new DockerBuildKitCacheMissingRule()
     ];
 }

@@ -674,6 +674,93 @@ public sealed class CacheRuleTests
         Assert.Empty(findings);
     }
 
+    [Fact]
+    public void DockerBuildKitCacheMissingReportsBuildPushActionWithoutCache()
+    {
+        var workflow = Workflow([
+            new("Build and push", "docker/build-push-action@v6", null, new Dictionary<string, string>
+            {
+                ["push"] = "true",
+                ["tags"] = "user/app:latest"
+            }, 10)
+        ]);
+
+        var finding = Assert.Single(new DockerBuildKitCacheMissingRule().Analyze(workflow, Repository()));
+
+        Assert.Equal("GHA-CACHE009", finding.RuleId);
+        Assert.Equal("test", finding.JobId);
+        Assert.Contains("cache-from", finding.Recommendation);
+    }
+
+    [Fact]
+    public void DockerBuildKitCacheMissingDoesNotReportWithBothCacheFields()
+    {
+        var workflow = Workflow([
+            new("Build and push", "docker/build-push-action@v6", null, new Dictionary<string, string>
+            {
+                ["push"] = "true",
+                ["tags"] = "user/app:latest",
+                ["cache-from"] = "type=gha",
+                ["cache-to"] = "type=gha,mode=max"
+            }, 10)
+        ]);
+
+        var findings = new DockerBuildKitCacheMissingRule().Analyze(workflow, Repository());
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public void DockerBuildKitCacheMissingDoesNotReportWithCacheFromOnly()
+    {
+        var workflow = Workflow([
+            new("Build", "docker/build-push-action@v6", null, new Dictionary<string, string>
+            {
+                ["cache-from"] = "type=gha"
+            }, 10)
+        ]);
+
+        var findings = new DockerBuildKitCacheMissingRule().Analyze(workflow, Repository());
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public void DockerBuildKitCacheMissingReportsBuildXWithoutCacheFlags()
+    {
+        var workflow = Workflow([
+            new("Build image", null, "docker buildx build -t myimage:latest .", new Dictionary<string, string>(), 12)
+        ]);
+
+        var finding = Assert.Single(new DockerBuildKitCacheMissingRule().Analyze(workflow, Repository()));
+
+        Assert.Equal("GHA-CACHE009", finding.RuleId);
+    }
+
+    [Fact]
+    public void DockerBuildKitCacheMissingDoesNotReportBuildXWithCacheFlags()
+    {
+        var workflow = Workflow([
+            new("Build image", null, "docker buildx build --cache-from type=gha --cache-to type=gha,mode=max -t myimage:latest .", new Dictionary<string, string>(), 12)
+        ]);
+
+        var findings = new DockerBuildKitCacheMissingRule().Analyze(workflow, Repository());
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public void DockerBuildKitCacheMissingDoesNotReportPlainDockerBuild()
+    {
+        var workflow = Workflow([
+            new("Build image", null, "docker build -t myimage:latest .", new Dictionary<string, string>(), 12)
+        ]);
+
+        var findings = new DockerBuildKitCacheMissingRule().Analyze(workflow, Repository());
+
+        Assert.Empty(findings);
+    }
+
     private static WorkflowDocument Workflow(IReadOnlyList<WorkflowStep> steps) =>
         new("ci.yml", "CI", [new WorkflowJob("test", null, steps)]);
 

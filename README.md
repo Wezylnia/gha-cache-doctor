@@ -112,6 +112,7 @@ Recommendation: Include a dependency lockfile hash, for example `${{ runner.os }
 | [`GHA-CACHE006`](docs/rules/GHA-CACHE006-gradle-cache-missing.md) | info | performance | Reports Gradle build or test jobs that run before Gradle dependency caching is configured. |
 | [`GHA-CACHE007`](docs/rules/GHA-CACHE007-setup-python-pip-cache-missing.md) | info | performance | Reports `actions/setup-python` usage without pip dependency caching when Python installs are present. |
 | [`GHA-CACHE008`](docs/rules/GHA-CACHE008-dotnet-cache-missing.md) | info | performance | Reports .NET NuGet restore commands without configured NuGet package caching. |
+| [`GHA-CACHE009`](docs/rules/GHA-CACHE009-docker-buildkit-cache-missing.md) | info | performance | Reports `docker/build-push-action` and `docker buildx build` without BuildKit layer caching. |
 
 Want to add the next rule? The rule system is intentionally simple: one small class, focused tests, one docs page, and a README table update. See [Adding a Rule](docs/contributing/adding-a-rule.md).
 
