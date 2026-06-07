@@ -6,7 +6,7 @@ A focused .NET CLI that scans GitHub Actions workflows for cache misconfiguratio
 [![Latest release](https://img.shields.io/github/v/release/Wezylnia/gha-cache-doctor?include_prereleases&label=release)](https://github.com/Wezylnia/gha-cache-doctor/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Current release: `0.8.0` · License: MIT · Target framework: .NET 10
+Current release: `0.9.0` · License: MIT · Target framework: .NET 10
 
 `gha-cache-doctor` is a polished MVP and intentionally small. If you like CI/CD tooling, static analysis, or shaving minutes off slow pipelines, there are good first issues ready for contributors.
 
@@ -37,7 +37,7 @@ GitHub Actions caching looks simple, but cache configuration is easy to get wron
 
 ## Status
 
-Current release: `0.8.0`
+Current release: `0.9.0`
 
 The project is ready for local usage and public contribution. The CLI, parser, reporters, strict-mode behavior, initial rules, tests, sample workflows, and contributor docs are in place. See [docs/project-status.md](docs/project-status.md) and [docs/roadmap.md](docs/roadmap.md).
 
@@ -114,6 +114,9 @@ Recommendation: Include a dependency lockfile hash, for example `${{ runner.os }
 | [`GHA-CACHE008`](docs/rules/GHA-CACHE008-dotnet-cache-missing.md) | info | performance | Reports .NET NuGet restore commands without configured NuGet package caching. |
 | [`GHA-CACHE009`](docs/rules/GHA-CACHE009-docker-buildkit-cache-missing.md) | info | performance | Reports `docker/build-push-action` and `docker buildx build` without BuildKit layer caching. |
 | [`GHA-CACHE010`](docs/rules/GHA-CACHE010-setup-python-package-cache-missing.md) | info | performance | Reports `actions/setup-python` with Poetry or Pipenv installs but without the matching cache type. |
+| [`GHA-CACHE011`](docs/rules/GHA-CACHE011-go-cache-missing.md) | info | performance | Reports `actions/setup-go` without Go module caching. |
+| [`GHA-CACHE012`](docs/rules/GHA-CACHE012-cargo-cache-missing.md) | info | performance | Reports Cargo commands without Rust dependency caching. |
+| [`GHA-CACHE013`](docs/rules/GHA-CACHE013-maven-cache-missing.md) | info | performance | Reports Maven commands without Maven dependency caching. |
 
 Want to add the next rule? The rule system is intentionally simple: one small class, focused tests, one docs page, and a README table update. See [Adding a Rule](docs/contributing/adding-a-rule.md).
 

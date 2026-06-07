@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The project follows preview releases until the first stable `1.0.0`.
 
+## 0.9.0 - 2026-06-07
+
+### Added
+
+- `GHA-CACHE011` go-cache-missing rule: detects `actions/setup-go` without Go module caching.
+- `GHA-CACHE012` cargo-cache-missing rule: detects Cargo commands without Rust dependency caching.
+- `GHA-CACHE013` maven-cache-missing rule: detects Maven commands without Maven dependency caching.
+- SARIF `partialFingerprints` for GitHub Code Scanning alert tracking.
+- Machine-readable JSON schemas for output, baseline, and configuration.
+
+### Changed
+
+- Package version updated to `0.9.0`.
+
 ## 0.8.0 - 2026-06-07
 
 ### Added
