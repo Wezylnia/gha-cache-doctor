@@ -19,7 +19,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v6
-      - uses: Wezylnia/gha-cache-doctor@v0.4.0
+      - uses: Wezylnia/gha-cache-doctor@v1.0.0
         with:
           fail-on: warning
 ```
@@ -46,7 +46,7 @@ By default the action writes a Markdown report to the GitHub job summary.
 Use `github-annotations` to emit GitHub workflow commands:
 
 ```yaml
-- uses: Wezylnia/gha-cache-doctor@v0.4.0
+- uses: Wezylnia/gha-cache-doctor@v1.0.0
   with:
     format: github-annotations
     fail-on: warning
@@ -55,7 +55,7 @@ Use `github-annotations` to emit GitHub workflow commands:
 ## SARIF Output
 
 ```yaml
-- uses: Wezylnia/gha-cache-doctor@v0.4.0
+- uses: Wezylnia/gha-cache-doctor@v1.0.0
   with:
     format: sarif
     fail-on: none

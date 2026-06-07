@@ -237,7 +237,7 @@ Official action wrapper:
 
 ```yaml
 - uses: actions/checkout@v6
-- uses: Wezylnia/gha-cache-doctor@v0.4.0
+- uses: Wezylnia/gha-cache-doctor@v1.0.0
   with:
     fail-on: warning
 ```
