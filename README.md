@@ -6,7 +6,7 @@ A focused .NET CLI that scans GitHub Actions workflows for cache misconfiguratio
 [![Latest release](https://img.shields.io/github/v/release/Wezylnia/gha-cache-doctor?include_prereleases&label=release)](https://github.com/Wezylnia/gha-cache-doctor/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Current release: `0.5.0` · License: MIT · Target framework: .NET 10
+Current release: `0.6.0` · License: MIT · Target framework: .NET 10
 
 `gha-cache-doctor` is a polished MVP and intentionally small. If you like CI/CD tooling, static analysis, or shaving minutes off slow pipelines, there are good first issues ready for contributors.
 
@@ -37,7 +37,7 @@ GitHub Actions caching looks simple, but cache configuration is easy to get wron
 
 ## Status
 
-Current release: `0.5.0`
+Current release: `0.6.0`
 
 The project is ready for local usage and public contribution. The CLI, parser, reporters, strict-mode behavior, initial rules, tests, sample workflows, and contributor docs are in place. See [docs/project-status.md](docs/project-status.md) and [docs/roadmap.md](docs/roadmap.md).
 
@@ -57,7 +57,7 @@ For local packaging:
 
 ```bash
 dotnet pack src/GhaCacheDoctor.Cli --configuration Release
-dotnet tool install --tool-path .tmp/tools gha-cache-doctor --version 0.5.0 --add-source src/GhaCacheDoctor.Cli/bin/Release
+dotnet tool install --tool-path .tmp/tools gha-cache-doctor --version 0.6.0 --add-source src/GhaCacheDoctor.Cli/bin/Release
 .tmp/tools/gha-cache-doctor scan --path samples/github-actions/bad --fail-on none
 ```
 
@@ -239,7 +239,7 @@ Once installed as a tool:
 
 ```yaml
 - name: Install gha-cache-doctor
-  run: dotnet tool install --global gha-cache-doctor --version 0.5.0
+  run: dotnet tool install --global gha-cache-doctor --version 0.6.0
 
 - name: Check cache configuration
   run: gha-cache-doctor scan --fail-on warning

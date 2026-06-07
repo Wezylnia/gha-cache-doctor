@@ -60,6 +60,22 @@ Focus: broader cache coverage.
 - Add dotnet restore cache rule.
 - Add Docker BuildKit layer cache rule.
 
+## v0.6.0 - shipped
+
+Focus: monorepo and package-manager precision.
+
+- Improve workspace context detection.
+- Strengthen `setup-node` dependency-path recommendations.
+- Add Poetry and Pipenv cache coverage.
+
+## v0.7.0
+
+Focus: adoption controls.
+
+- Add baseline suppression support.
+- Add baseline generation.
+- Add inline suppression comments.
+
 ## v1.0.0
 
 Focus: stable public release.

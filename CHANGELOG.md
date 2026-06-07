@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The project follows preview releases until the first stable `1.0.0`.
 
+## 0.6.0 - 2026-06-07
+
+### Added
+
+- `GHA-CACHE010` setup-python-package-cache-missing rule: detects Poetry and Pipenv cache misconfiguration on `actions/setup-python`.
+- Yarn `.yarnrc.yml` and `.yarn/cache` workspace context detection.
+- `Directory.Packages.props` context detection.
+
+### Changed
+
+- `LooksLikeNodeMonorepo` now includes `.yarnrc.yml` as a monorepo signal.
+- `GHA-CACHE002` recommendation text now includes concrete glob patterns (`**/package-lock.json`, `**/pnpm-lock.yaml`, `**/yarn.lock`).
+- Package version updated to `0.6.0`.
+
 ## 0.5.0 - 2026-06-07
 
 ### Added

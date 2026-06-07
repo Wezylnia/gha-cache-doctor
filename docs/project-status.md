@@ -4,9 +4,9 @@ This public status document tracks user-facing progress from the current MVP tow
 
 ## Current Version Target
 
-Current release: `0.5.0`
+Current release: `0.6.0`
 
-Goal: keep .NET and Docker cache coverage stable while preparing monorepo precision for `v0.6.0`.
+Goal: keep monorepo and package-manager precision stable while preparing adoption controls for `v0.7.0`.
 
 ## Completed In v0.5.0
 
@@ -75,7 +75,7 @@ The repository is configured so public contribution should flow through pull req
 
 ## Next Release
 
-The next milestone is `v0.6.0`, focused on monorepo precision and package-manager-aware cache path guidance.
+The next milestone is `v0.7.0`, focused on baselines and suppression controls for easier adoption.
 
 ## Validation Commands
 

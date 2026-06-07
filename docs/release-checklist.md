@@ -18,7 +18,7 @@
 dotnet build GhaCacheDoctor.slnx --configuration Release
 dotnet test GhaCacheDoctor.slnx --configuration Release --no-build
 dotnet pack src/GhaCacheDoctor.Cli --configuration Release --no-build
-dotnet tool install --tool-path .tmp/tools gha-cache-doctor --version 0.5.0 --add-source src/GhaCacheDoctor.Cli/bin/Release
+dotnet tool install --tool-path .tmp/tools gha-cache-doctor --version 0.6.0 --add-source src/GhaCacheDoctor.Cli/bin/Release
 .tmp/tools/gha-cache-doctor scan --path samples/github-actions/bad --fail-on none
 ```
 
