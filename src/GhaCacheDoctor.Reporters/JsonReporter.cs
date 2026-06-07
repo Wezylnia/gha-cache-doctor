@@ -13,5 +13,16 @@ public sealed class JsonReporter : IReporter
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
     };
 
-    public string Render(ScanResult result) => JsonSerializer.Serialize(result, Options) + Environment.NewLine;
+    public string Render(ScanResult result) => Render(result, showSuppressions: false);
+
+    public string Render(ScanResult result, bool showSuppressions)
+    {
+        if (showSuppressions)
+        {
+            return JsonSerializer.Serialize(result, Options) + Environment.NewLine;
+        }
+
+        var payload = new { result.Findings, result.ParseErrors };
+        return JsonSerializer.Serialize(payload, Options) + Environment.NewLine;
+    }
 }

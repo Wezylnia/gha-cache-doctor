@@ -236,4 +236,77 @@ public sealed class ReporterTests
         Assert.Contains("::warning file=.github/workflows/ci%3Atest.yml,title=GHA-CACHE003 correctness,line=8::Weak cache key, missing 100%25 lockfile. Recommendation: Use hashFiles.%0AKeep restore keys scoped.", output);
         Assert.Contains("::error file=.github/workflows/bad.yml,title=parse-error,line=3::Invalid | YAML", output);
     }
+
+    [Fact]
+    public void JsonContract_v1_has_required_top_level_fields()
+    {
+        var result = new ScanResult([], []);
+        var output = new JsonReporter().Render(result);
+        using var document = JsonDocument.Parse(output);
+
+        Assert.True(document.RootElement.TryGetProperty("findings", out _));
+        Assert.True(document.RootElement.TryGetProperty("parseErrors", out _));
+    }
+
+    [Fact]
+    public void JsonContract_v1_finding_has_all_fields()
+    {
+        var result = new ScanResult([
+            new Finding("GHA-CACHE003", Severity.Warning, "correctness", "msg", "rec", "ci.yml", 8, "build", "step1")
+        ], []);
+        var output = new JsonReporter().Render(result);
+        using var document = JsonDocument.Parse(output);
+        var f = document.RootElement.GetProperty("findings")[0];
+
+        Assert.Equal("GHA-CACHE003", f.GetProperty("ruleId").GetString());
+        Assert.Equal("warning", f.GetProperty("severity").GetString());
+        Assert.Equal("correctness", f.GetProperty("category").GetString());
+        Assert.Equal("msg", f.GetProperty("message").GetString());
+        Assert.Equal("rec", f.GetProperty("recommendation").GetString());
+        Assert.Equal("ci.yml", f.GetProperty("filePath").GetString());
+        Assert.Equal(8, f.GetProperty("line").GetInt32());
+        Assert.Equal("build", f.GetProperty("jobId").GetString());
+        Assert.Equal("step1", f.GetProperty("stepName").GetString());
+    }
+
+    [Fact]
+    public void JsonContract_v1_suppressedFindings_omitted_by_default()
+    {
+        var result = new ScanResult([], [], []);
+        var output = new JsonReporter().Render(result);
+        using var document = JsonDocument.Parse(output);
+        Assert.False(document.RootElement.TryGetProperty("suppressedFindings", out _));
+    }
+
+    [Fact]
+    public void JsonContract_v1_suppressedFindings_present_when_requested()
+    {
+        var result = new ScanResult([], [], [
+            new SuppressedFinding("GHA-CACHE001", "ci.yml", 5, "inline-next-line", Severity.Info, "performance", "msg")
+        ]);
+        var output = new JsonReporter().Render(result, showSuppressions: true);
+        using var document = JsonDocument.Parse(output);
+        var sf = document.RootElement.GetProperty("suppressedFindings")[0];
+
+        Assert.Equal("GHA-CACHE001", sf.GetProperty("ruleId").GetString());
+        Assert.Equal("inline-next-line", sf.GetProperty("suppressionSource").GetString());
+    }
+
+    [Fact]
+    public void SarifContract_v1_has_version_and_driver()
+    {
+        var result = new ScanResult([
+            new Finding("GHA-CACHE003", Severity.Warning, "correctness", "msg", "rec", "ci.yml", 8, "build", "step1")
+        ], []);
+        var output = new SarifReporter().Render(result);
+        using var document = JsonDocument.Parse(output);
+
+        Assert.Equal("2.1.0", document.RootElement.GetProperty("version").GetString());
+        var driver = document.RootElement.GetProperty("runs")[0].GetProperty("tool").GetProperty("driver");
+        Assert.Equal("gha-cache-doctor", driver.GetProperty("name").GetString());
+        Assert.True(driver.TryGetProperty("rules", out _));
+        var result0 = document.RootElement.GetProperty("runs")[0].GetProperty("results")[0];
+        Assert.Equal("GHA-CACHE003", result0.GetProperty("ruleId").GetString());
+        Assert.True(result0.TryGetProperty("partialFingerprints", out _));
+    }
 }

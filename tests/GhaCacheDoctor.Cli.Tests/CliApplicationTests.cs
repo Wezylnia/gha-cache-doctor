@@ -939,6 +939,114 @@ public sealed class CliApplicationTests
         Assert.Equal(1, exitCode);
         Assert.Contains("GHA-CACHE001", output.ToString());
     }
+
+    [Fact]
+    public void V1Contract_FailOnNone_returns_0()
+    {
+        using var directory = new TempDirectory();
+        directory.Write(".github/workflows/ci.yml", "jobs:\n  test:\n    steps:\n      - uses: actions/cache@v4\n        with:\n          path: ~/.npm\n          key: npm-cache\n");
+
+        var exitCode = new CliApplication(new StringWriter(), new StringWriter()).Run(["scan", "--repo", directory.Path, "--fail-on", "none"]);
+
+        Assert.Equal(0, exitCode);
+    }
+
+    [Fact]
+    public void V1Contract_FailOnWarning_returns_1_for_warning()
+    {
+        using var directory = new TempDirectory();
+        directory.Write(".github/workflows/ci.yml", "jobs:\n  test:\n    steps:\n      - uses: actions/cache@v4\n        with:\n          path: ~/.npm\n          key: npm-cache\n");
+
+        var exitCode = new CliApplication(new StringWriter(), new StringWriter()).Run(["scan", "--repo", directory.Path, "--fail-on", "warning"]);
+
+        Assert.Equal(1, exitCode);
+    }
+
+    [Fact]
+    public void V1Contract_InvalidOption_returns_2()
+    {
+        var exitCode = new CliApplication(new StringWriter(), new StringWriter()).Run(["--bad-option"]);
+
+        Assert.Equal(2, exitCode);
+    }
+
+    [Fact]
+    public void V1Contract_ParseErrors_returns_3()
+    {
+        using var directory = new TempDirectory();
+        directory.Write(".github/workflows/ci.yml", "jobs: [");
+
+        var exitCode = new CliApplication(new StringWriter(), new StringWriter()).Run(["scan", "--repo", directory.Path]);
+
+        Assert.Equal(3, exitCode);
+    }
+
+    [Fact]
+    public void V1Contract_ShowSuppressions_does_not_change_exit_code()
+    {
+        using var directory = new TempDirectory();
+        directory.Write("package-lock.json", "{}");
+        directory.Write(".github/workflows/ci.yml", "jobs:\n  test:\n    steps:\n      - uses: actions/setup-node@v4\n      - run: npm ci\n");
+
+        var exitCode = new CliApplication(new StringWriter(), new StringWriter()).Run(["scan", "--repo", directory.Path, "--show-suppressions", "--fail-on", "none"]);
+
+        Assert.Equal(0, exitCode);
+    }
+
+    [Fact]
+    public void V1Contract_ConfigNone_disables_config()
+    {
+        using var directory = new TempDirectory();
+        directory.Write(".gha-cache-doctor.yml", "exclude:\n  - GHA-CACHE003\n");
+        directory.Write(".github/workflows/ci.yml", "jobs:\n  test:\n    steps:\n      - uses: actions/cache@v4\n        with:\n          path: ~/.npm\n          key: npm-cache\n");
+        var output = new StringWriter();
+
+        var exitCode = new CliApplication(output, new StringWriter()).Run(["scan", "--repo", directory.Path, "--config", "none"]);
+
+        Assert.Equal(0, exitCode);
+        Assert.Contains("GHA-CACHE003", output.ToString());
+    }
+
+    [Fact]
+    public void V1Contract_BaselineNone_disables_baseline()
+    {
+        using var directory = new TempDirectory();
+        directory.Write("package-lock.json", "{}");
+        directory.Write(".gha-cache-doctor.yml", "baseline: .gha-cache-doctor-baseline.json\n");
+        directory.Write(".gha-cache-doctor-baseline.json", "{\"version\":1,\"findings\":[{\"ruleId\":\"GHA-CACHE001\",\"filePath\":\".github/workflows/ci.yml\",\"jobId\":\"test\",\"stepName\":null,\"message\":\"actions/setup-node is used without dependency caching.\"}]}");
+        directory.Write(".github/workflows/ci.yml", "jobs:\n  test:\n    steps:\n      - uses: actions/setup-node@v4\n      - run: npm ci\n");
+        var output = new StringWriter();
+
+        var exitCode = new CliApplication(output, new StringWriter()).Run(["scan", "--repo", directory.Path, "--baseline", "none", "--fail-on", "info"]);
+
+        Assert.Equal(1, exitCode);
+        Assert.Contains("GHA-CACHE001", output.ToString());
+    }
+
+    [Fact]
+    public void V1Contract_PruneKeepsMatchingEntry()
+    {
+        using var directory = new TempDirectory();
+        directory.Write(".github/workflows/ci.yml", "jobs:\n  test:\n    steps:\n      - uses: actions/cache@v4\n        with:\n          path: ~/.npm\n          key: npm-cache\n");
+        directory.Write(".gha-cache-doctor-baseline.json", "{\"version\":1,\"findings\":[{\"ruleId\":\"GHA-CACHE003\",\"filePath\":\".github/workflows/ci.yml\",\"jobId\":\"test\",\"stepName\":null,\"message\":\"actions/cache uses a dependency cache path, but the key does not include a lockfile hash.\"}]}");
+
+        new CliApplication(new StringWriter(), new StringWriter()).Run(["scan", "--repo", directory.Path, "--baseline", ".gha-cache-doctor-baseline.json", "--prune-baseline", "--fail-on", "none"]);
+
+        var content = File.ReadAllText(System.IO.Path.Combine(directory.Path, ".gha-cache-doctor-baseline.json"));
+        Assert.Contains("GHA-CACHE003", content);
+    }
+
+    [Fact]
+    public void V1Contract_PruneCreatesBackup()
+    {
+        using var directory = new TempDirectory();
+        directory.Write(".github/workflows/ci.yml", "jobs:\n  test:\n    steps:\n      - uses: actions/cache@v4\n        with:\n          path: ~/.npm\n          key: npm-cache\n");
+        directory.Write(".gha-cache-doctor-baseline.json", "{\"version\":1,\"findings\":[]}");
+
+        new CliApplication(new StringWriter(), new StringWriter()).Run(["scan", "--repo", directory.Path, "--baseline", ".gha-cache-doctor-baseline.json", "--prune-baseline", "--fail-on", "none"]);
+
+        Assert.True(File.Exists(System.IO.Path.Combine(directory.Path, ".gha-cache-doctor-baseline.json.bak")));
+    }
 }
 
 internal sealed class TempDirectory : IDisposable
