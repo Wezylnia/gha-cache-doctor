@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Wezylnia/gha-cache-doctor/schemas/configuration.schema.json",
+  "title": "gha-cache-doctor Configuration",
+  "type": "object",
+  "properties": {
+    "path": { "type": "string", "description": "Workflow file or directory to scan." },
+    "workflowPath": { "type": "string", "description": "Alias for path." },
+    "format": { "type": "string", "enum": ["text", "json", "markdown", "sarif", "github-summary", "github-annotations"] },
+    "failOn": { "type": "string", "enum": ["none", "info", "warning", "error"] },
+    "fail-on": { "type": "string", "enum": ["none", "info", "warning", "error"] },
+    "strict": { "type": "boolean" },
+    "include": { "type": "array", "items": { "type": "string" } },
+    "exclude": { "type": "array", "items": { "type": "string" } },
+    "disabledRules": { "type": "array", "items": { "type": "string" } },
+    "severity": { "type": "object", "additionalProperties": { "type": "string", "enum": ["info", "warning", "error"] } },
+    "severityOverrides": { "type": "object", "additionalProperties": { "type": "string", "enum": ["info", "warning", "error"] } },
+    "baseline": { "type": "string", "description": "Path to baseline JSON file for suppressing known findings." }
+  }
+}

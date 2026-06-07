@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Wezylnia/gha-cache-doctor/schemas/json-output.schema.json",
+  "title": "gha-cache-doctor JSON Output",
+  "type": "object",
+  "properties": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ruleId": { "type": "string" },
+          "severity": { "type": "string", "enum": ["info", "warning", "error"] },
+          "category": { "type": "string" },
+          "message": { "type": "string" },
+          "recommendation": { "type": "string" },
+          "filePath": { "type": "string" },
+          "line": { "type": "integer" },
+          "jobId": { "type": "string" },
+          "stepName": { "type": "string" }
+        }
+      }
+    },
+    "parseErrors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "filePath": { "type": "string" },
+          "line": { "type": "integer" },
+          "message": { "type": "string" }
+        }
+      }
+    },
+    "suppressedFindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ruleId": { "type": "string" },
+          "filePath": { "type": "string" },
+          "line": { "type": "integer" },
+          "suppressionSource": { "type": "string", "enum": ["baseline", "inline-next-line", "inline-file"] },
+          "severity": { "type": "string" },
+          "category": { "type": "string" },
+          "message": { "type": "string" }
+        }
+      }
+    }
+  }
+}
