@@ -47,6 +47,12 @@ public sealed class CliApplication
     private int RunScan(IReadOnlyList<string> args)
     {
         var parse = ScanArguments.Parse(args);
+        if (parse.HelpRequested)
+        {
+            output.Write(HelpText());
+            return 0;
+        }
+
         if (parse.Error is not null)
         {
             error.WriteLine(parse.Error);
@@ -175,7 +181,7 @@ public sealed class CliApplication
         """;
 }
 
-internal sealed record ScanArgumentParse(ParsedScanArguments Arguments, string? Error);
+internal sealed record ScanArgumentParse(ParsedScanArguments Arguments, string? Error, bool HelpRequested = false);
 
 internal sealed record ParsedScanArguments(
     string RepositoryPath,
@@ -278,7 +284,7 @@ internal static class ScanArguments
             {
                 case "-h":
                 case "--help":
-                    return new ScanArgumentParse(CreateArguments(repo, workflowPath, outputFormat, failOn, failOnSet, include, includeSet, exclude, excludeSet, strict, configPath, baselinePath, baselineSet, writeBaselinePath, pruneBaseline, showSuppressions), null);
+                    return new ScanArgumentParse(CreateArguments(repo, workflowPath, outputFormat, failOn, failOnSet, include, includeSet, exclude, excludeSet, strict, configPath, baselinePath, baselineSet, writeBaselinePath, pruneBaseline, showSuppressions), null, HelpRequested: true);
                 case "--repo":
                     if (!TryReadValue(args, ref index, out repo))
                     {
