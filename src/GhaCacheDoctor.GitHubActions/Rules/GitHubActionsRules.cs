@@ -12,6 +12,7 @@ public static class GitHubActionsRules
         new RestoreKeysTooBroadRule(),
         new InstallStepWithoutCacheRule(),
         new GradleCacheMissingRule(),
-        new SetupPythonPipCacheMissingRule()
+        new SetupPythonPipCacheMissingRule(),
+        new DotNetCacheMissingRule()
     ];
 }

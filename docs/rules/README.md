@@ -11,6 +11,7 @@
 | [`GHA-CACHE005`](GHA-CACHE005-install-step-without-cache.md) | Detects install steps that appear to run without a matching cache. |
 | [`GHA-CACHE006`](GHA-CACHE006-gradle-cache-missing.md) | Detects Gradle build or test jobs that run before Gradle dependency caching is configured. |
 | [`GHA-CACHE007`](GHA-CACHE007-setup-python-pip-cache-missing.md) | Detects `actions/setup-python` without pip dependency caching when Python installs are present. |
+| [`GHA-CACHE008`](GHA-CACHE008-dotnet-cache-missing.md) | Detects .NET NuGet restore commands without configured NuGet package caching. |
 
 New rules should include focused tests, a rule document, and a README table update.
 

@@ -11,6 +11,7 @@ internal static class RuleTitles
         "GHA-CACHE005" => "install-step-without-cache",
         "GHA-CACHE006" => "gradle-cache-missing",
         "GHA-CACHE007" => "setup-python-pip-cache-missing",
+        "GHA-CACHE008" => "dotnet-cache-missing",
         "GHA-CACHE-PARSE" => "workflow-parse-error",
         _ => "cache-rule"
     };

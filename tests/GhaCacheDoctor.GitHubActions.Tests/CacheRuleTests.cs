@@ -548,6 +548,132 @@ public sealed class CacheRuleTests
         Assert.Equal(rules.Count, rules.Select(rule => rule.Id).Distinct(StringComparer.Ordinal).Count());
     }
 
+    [Fact]
+    public void DotNetCacheMissingReportsDotnetRestore()
+    {
+        var workflow = Workflow([
+            new("Restore", null, "dotnet restore", new Dictionary<string, string>(), 12)
+        ]);
+
+        var finding = Assert.Single(new DotNetCacheMissingRule().Analyze(workflow, Repository()));
+
+        Assert.Equal("GHA-CACHE008", finding.RuleId);
+        Assert.Equal("test", finding.JobId);
+        Assert.Equal("Restore", finding.StepName);
+        Assert.Contains("~/.nuget/packages", finding.Recommendation);
+    }
+
+    [Fact]
+    public void DotNetCacheMissingReportsDotnetBuildWithoutNoRestore()
+    {
+        var workflow = Workflow([
+            new("Build", null, "dotnet build", new Dictionary<string, string>(), 12)
+        ]);
+
+        var finding = Assert.Single(new DotNetCacheMissingRule().Analyze(workflow, Repository()));
+
+        Assert.Equal("GHA-CACHE008", finding.RuleId);
+    }
+
+    [Fact]
+    public void DotNetCacheMissingReportsDotnetTestWithoutNoRestore()
+    {
+        var workflow = Workflow([
+            new("Test", null, "dotnet test", new Dictionary<string, string>(), 12)
+        ]);
+
+        var finding = Assert.Single(new DotNetCacheMissingRule().Analyze(workflow, Repository()));
+
+        Assert.Equal("GHA-CACHE008", finding.RuleId);
+    }
+
+    [Fact]
+    public void DotNetCacheMissingReportsDotnetPublishWithoutNoRestore()
+    {
+        var workflow = Workflow([
+            new("Publish", null, "dotnet publish -c Release", new Dictionary<string, string>(), 12)
+        ]);
+
+        var finding = Assert.Single(new DotNetCacheMissingRule().Analyze(workflow, Repository()));
+
+        Assert.Equal("GHA-CACHE008", finding.RuleId);
+    }
+
+    [Fact]
+    public void DotNetCacheMissingDoesNotReportDotnetTestNoRestore()
+    {
+        var workflow = Workflow([
+            new("Test", null, "dotnet test --no-restore", new Dictionary<string, string>(), 12)
+        ]);
+
+        var findings = new DotNetCacheMissingRule().Analyze(workflow, Repository());
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public void DotNetCacheMissingDoesNotReportDotnetBuildNoRestore()
+    {
+        var workflow = Workflow([
+            new("Build", null, "dotnet build --no-restore", new Dictionary<string, string>(), 12)
+        ]);
+
+        var findings = new DotNetCacheMissingRule().Analyze(workflow, Repository());
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public void DotNetCacheMissingDoesNotReportWithNuGetCacheBefore()
+    {
+        var workflow = Workflow([
+            new("Cache NuGet", "actions/cache@v4", null, new Dictionary<string, string>
+            {
+                ["path"] = "~/.nuget/packages",
+                ["key"] = "${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}"
+            }, 5),
+            new("Restore", null, "dotnet restore", new Dictionary<string, string>(), 12)
+        ]);
+
+        var findings = new DotNetCacheMissingRule().Analyze(workflow, Repository());
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public void DotNetCacheMissingReportsWhenCacheAppearsAfterRestore()
+    {
+        var workflow = Workflow([
+            new("Restore", null, "dotnet restore", new Dictionary<string, string>(), 12),
+            new("Cache NuGet", "actions/cache@v4", null, new Dictionary<string, string>
+            {
+                ["path"] = "~/.nuget/packages",
+                ["key"] = "nuget"
+            }, 20)
+        ]);
+
+        var finding = Assert.Single(new DotNetCacheMissingRule().Analyze(workflow, Repository()));
+
+        Assert.Equal("GHA-CACHE008", finding.RuleId);
+    }
+
+    [Fact]
+    public void DotNetCacheMissingRecognizesEnvNuGetPackagesPath()
+    {
+        var workflow = Workflow([
+            new("Cache NuGet", "actions/cache@v4", null, new Dictionary<string, string>
+            {
+                ["path"] = "${{ env.NUGET_PACKAGES }}",
+                ["key"] = "${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}"
+            }, 5),
+            new("Restore", null, "dotnet restore", new Dictionary<string, string>(), 12)
+        ]);
+
+        var findings = new DotNetCacheMissingRule().Analyze(workflow, Repository());
+
+        Assert.Empty(findings);
+    }
+
     private static WorkflowDocument Workflow(IReadOnlyList<WorkflowStep> steps) =>
         new("ci.yml", "CI", [new WorkflowJob("test", null, steps)]);
 
