@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The project follows preview releases until the first stable `1.0.0`.
 
+## 0.8.0 - 2026-06-07
+
+### Added
+
+- Stable SHA-256 baseline fingerprints for reliable matching across line changes.
+- `--prune-baseline` to remove stale baseline entries.
+- `--show-suppressions` to make suppressed findings visible in text output.
+- `SuppressedFinding` model with suppression source tracking (baseline, inline-file, inline-next-line).
+
+### Changed
+
+- Package version updated to `0.8.0`.
+
 ## 0.7.0 - 2026-06-07
 
 ### Added
