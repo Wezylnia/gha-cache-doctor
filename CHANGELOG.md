@@ -9,6 +9,7 @@ The project follows preview releases until the first stable `1.0.0`.
 ### Added
 
 - `GHA-CACHE006` Gradle cache opportunity rule with docs, samples, and unit tests.
+- `GHA-CACHE007` setup-python pip cache rule with docs and unit tests.
 
 ## 0.2.0 - 2026-06-05
 

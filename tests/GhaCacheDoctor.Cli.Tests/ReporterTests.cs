@@ -64,6 +64,27 @@ public sealed class ReporterTests
     }
 
     [Fact]
+    public void TextReporterIncludesSetupPythonPipRuleTitle()
+    {
+        var result = new ScanResult([
+            new Finding(
+                "GHA-CACHE007",
+                Severity.Info,
+                "performance",
+                "setup-python pip cache missing.",
+                "Add `cache: pip`.",
+                ".github/workflows/ci.yml",
+                14,
+                "test",
+                "Setup Python")
+        ], []);
+
+        var output = new TextReporter().Render(result);
+
+        Assert.Contains("[info] GHA-CACHE007 setup-python-pip-cache-missing", output);
+    }
+
+    [Fact]
     public void TextReporterIncludesParseErrors()
     {
         var result = new ScanResult([], [

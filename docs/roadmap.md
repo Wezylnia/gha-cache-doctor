@@ -58,7 +58,6 @@ Focus: SARIF output.
 Focus: broader cache coverage.
 
 - Add dotnet restore cache rule.
-- Add Python pip cache rule.
 - Add Docker BuildKit layer cache rule.
 
 ## v1.0.0

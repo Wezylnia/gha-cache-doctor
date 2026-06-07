@@ -25,6 +25,11 @@ public sealed class InstallStepWithoutCacheRule : IRule
                 continue;
             }
 
+            if (RuleHelpers.IsPipInstall(installStep) && RuleHelpers.HasSetupPython(job))
+            {
+                continue;
+            }
+
             findings.Add(new Finding(
                 Id,
                 DefaultSeverity,
