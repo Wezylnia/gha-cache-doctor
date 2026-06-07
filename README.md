@@ -139,6 +139,8 @@ Options:
   --config <path|none>      Config file. Defaults to .gha-cache-doctor.yml if present.
   --baseline <path|none>    Baseline file for suppressing known findings.
   --write-baseline <path>   Write current findings to a baseline file.
+  --prune-baseline          Remove stale entries from the baseline file.
+  --show-suppressions       Include suppressed findings in output.
   -h, --help                Show help.
 ```
 
