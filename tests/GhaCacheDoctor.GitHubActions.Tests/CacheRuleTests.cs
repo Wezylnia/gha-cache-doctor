@@ -84,6 +84,49 @@ public sealed class CacheRuleTests
     }
 
     [Fact]
+    public void SetupNodeCacheDependencyPathMissingDoesNotReportSingleRootLockfile()
+    {
+        var workflow = Workflow([
+            new("Setup Node", "actions/setup-node@v4", null, new Dictionary<string, string> { ["cache"] = "npm" }, 10)
+        ]);
+        var repository = Repository(lockFiles: ["package-lock.json"], packageJsonFiles: ["package.json"]);
+
+        var findings = new SetupNodeCacheDependencyPathMissingRule().Analyze(workflow, repository);
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public void SetupNodeCacheDependencyPathMissingReportsForYarnRcMonorepo()
+    {
+        var workflow = Workflow([
+            new("Setup Node", "actions/setup-node@v4", null, new Dictionary<string, string> { ["cache"] = "yarn" }, 10)
+        ]);
+        var repository = Repository(
+            files: [".yarnrc.yml", "package.json", "yarn.lock"],
+            lockFiles: ["yarn.lock"],
+            packageJsonFiles: ["package.json"]);
+
+        var finding = Assert.Single(new SetupNodeCacheDependencyPathMissingRule().Analyze(workflow, repository));
+
+        Assert.Equal("GHA-CACHE002", finding.RuleId);
+        Assert.Contains("yarn.lock", finding.Recommendation);
+    }
+
+    [Fact]
+    public void SetupNodeCacheDependencyPathMissingRecommendationIncludesGlobPattern()
+    {
+        var workflow = Workflow([
+            new("Setup Node", "actions/setup-node@v4", null, new Dictionary<string, string> { ["cache"] = "npm" }, 10)
+        ]);
+        var repository = Repository(lockFiles: ["apps/web/package-lock.json", "apps/api/package-lock.json"]);
+
+        var finding = Assert.Single(new SetupNodeCacheDependencyPathMissingRule().Analyze(workflow, repository));
+
+        Assert.Contains("**/package-lock.json", finding.Recommendation);
+    }
+
+    [Fact]
     public void ActionsCacheKeyMissingLockfileHashReportsDependencyCacheKey()
     {
         var workflow = Workflow([

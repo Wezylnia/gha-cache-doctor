@@ -43,14 +43,19 @@ public sealed class SetupNodeCacheDependencyPathMissingRule : IRule
 
     private static string GetRecommendation(RepositoryContext repository, WorkflowJob job, WorkflowStep step)
     {
-        var cacheKind = RuleHelpers.GetWith(step, "cache");
-        if (cacheKind?.Equals("pnpm", StringComparison.OrdinalIgnoreCase) == true ||
-            repository.PnpmWorkspaceFiles.Count > 0 ||
-            RuleHelpers.DetectNodeCacheKind(repository, job).Equals("pnpm", StringComparison.OrdinalIgnoreCase))
+        var cacheKind = RuleHelpers.GetWith(step, "cache") ?? RuleHelpers.DetectNodeCacheKind(repository, job);
+
+        if (cacheKind.Equals("pnpm", StringComparison.OrdinalIgnoreCase) ||
+            repository.PnpmWorkspaceFiles.Count > 0)
         {
-            return "Set `cache-dependency-path` to the pnpm workspace lockfiles, for example `pnpm-lock.yaml` or a multi-line value that includes nested workspace lockfiles.";
+            return "Set `cache-dependency-path: '**/pnpm-lock.yaml'` so the cache key reflects all workspace lockfiles.";
         }
 
-        return "Set `cache-dependency-path` to the lockfile used by this job, for example `apps/web/package-lock.json`.";
+        if (cacheKind.Equals("yarn", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Set `cache-dependency-path: '**/yarn.lock'` so the cache key reflects all workspace lockfiles.";
+        }
+
+        return "Set `cache-dependency-path: '**/package-lock.json'` so the cache key reflects all workspace lockfiles.";
     }
 }
