@@ -5,4 +5,6 @@ namespace GhaCacheDoctor.Reporters;
 public interface IReporter
 {
     string Render(ScanResult result);
+
+    string Render(ScanResult result, bool showSuppressions) => Render(result);
 }

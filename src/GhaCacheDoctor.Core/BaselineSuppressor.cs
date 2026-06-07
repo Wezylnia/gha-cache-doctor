@@ -104,23 +104,34 @@ public sealed record BaselineEntry(
 
 public static class BaselineSuppressor
 {
-    public static ScanResult Apply(ScanResult result, string baselinePath)
+    public static (ScanResult Result, List<SuppressedFinding> Suppressed) ApplyWithTracking(ScanResult result, string baselinePath)
     {
         var baseline = BaselineDocument.Load(baselinePath);
         var entries = baseline.Findings ?? [];
 
         var remainingFindings = new List<Finding>();
+        var suppressed = new List<SuppressedFinding>();
         foreach (var finding in result.Findings)
         {
             if (entries.Any(entry => entry.Matches(finding)))
             {
+                suppressed.Add(new SuppressedFinding(finding.RuleId, finding.FilePath, finding.Line, "baseline", finding.Severity, finding.Category, finding.Message));
                 continue;
             }
 
             remainingFindings.Add(finding);
         }
 
-        return new ScanResult(remainingFindings, result.ParseErrors);
+        var mergedSuppressed = result.SuppressedFindings
+            .Concat(suppressed)
+            .ToArray();
+        return (new ScanResult(remainingFindings, result.ParseErrors, mergedSuppressed), suppressed);
+    }
+
+    public static ScanResult Apply(ScanResult result, string baselinePath)
+    {
+        var (scanResult, _) = ApplyWithTracking(result, baselinePath);
+        return scanResult;
     }
 
     public static void Prune(ScanResult result, string baselinePath)

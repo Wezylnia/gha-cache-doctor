@@ -778,6 +778,96 @@ public sealed class CliApplicationTests
     }
 
     [Fact]
+    public void ShowSuppressionsIncludesBaselineSuppressedFindings()
+    {
+        using var directory = new TempDirectory();
+        directory.Write("package-lock.json", "{}");
+        directory.Write(
+            ".github/workflows/ci.yml",
+            """
+            jobs:
+              test:
+                steps:
+                  - uses: actions/setup-node@v4
+                  - run: npm ci
+            """);
+        directory.Write(
+            ".gha-cache-doctor-baseline.json",
+            """
+            {
+              "version": 1,
+              "findings": [
+                {
+                  "ruleId": "GHA-CACHE001",
+                  "filePath": ".github/workflows/ci.yml",
+                  "jobId": "test",
+                  "stepName": null,
+                  "message": "actions/setup-node is used without dependency caching."
+                },
+                {
+                  "ruleId": "GHA-CACHE005",
+                  "filePath": ".github/workflows/ci.yml",
+                  "jobId": "test",
+                  "stepName": null,
+                  "message": "This job installs dependencies but does not configure a matching dependency cache."
+                }
+              ]
+            }
+            """);
+        var output = new StringWriter();
+
+        var exitCode = new CliApplication(output, new StringWriter()).Run(["scan", "--repo", directory.Path, "--baseline", ".gha-cache-doctor-baseline.json", "--show-suppressions", "--fail-on", "none"]);
+
+        Assert.Equal(0, exitCode);
+        Assert.Contains("Suppressed findings", output.ToString());
+        Assert.Contains("GHA-CACHE001", output.ToString());
+    }
+
+    [Fact]
+    public void DefaultOutputOmitsSuppressedFindings()
+    {
+        using var directory = new TempDirectory();
+        directory.Write("package-lock.json", "{}");
+        directory.Write(
+            ".github/workflows/ci.yml",
+            """
+            jobs:
+              test:
+                steps:
+                  - uses: actions/setup-node@v4
+                  - run: npm ci
+            """);
+        directory.Write(
+            ".gha-cache-doctor-baseline.json",
+            """
+            {
+              "version": 1,
+              "findings": [
+                {
+                  "ruleId": "GHA-CACHE001",
+                  "filePath": ".github/workflows/ci.yml",
+                  "jobId": "test",
+                  "stepName": null,
+                  "message": "actions/setup-node is used without dependency caching."
+                },
+                {
+                  "ruleId": "GHA-CACHE005",
+                  "filePath": ".github/workflows/ci.yml",
+                  "jobId": "test",
+                  "stepName": null,
+                  "message": "This job installs dependencies but does not configure a matching dependency cache."
+                }
+              ]
+            }
+            """);
+        var output = new StringWriter();
+
+        new CliApplication(output, new StringWriter()).Run(["scan", "--repo", directory.Path, "--baseline", ".gha-cache-doctor-baseline.json", "--fail-on", "none"]);
+
+        Assert.DoesNotContain("Suppressed findings", output.ToString());
+    }
+
+    [Fact]
     public void InlineSuppressionDisableNextLineWorks()
     {
         using var directory = new TempDirectory();

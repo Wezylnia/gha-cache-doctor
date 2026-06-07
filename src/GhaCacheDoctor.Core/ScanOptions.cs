@@ -9,7 +9,8 @@ public sealed record ScanOptions(
     IReadOnlySet<string> ExcludeRuleIds,
     bool Strict,
     IReadOnlyDictionary<string, Severity> SeverityOverrides,
-    string? BaselinePath = null);
+    string? BaselinePath = null,
+    bool ShowSuppressions = false);
 
 public enum OutputFormat
 {

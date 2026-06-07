@@ -13,7 +13,23 @@ public sealed record Finding(
 
 public sealed record ScanResult(
     IReadOnlyList<Finding> Findings,
-    IReadOnlyList<WorkflowParseError> ParseErrors);
+    IReadOnlyList<WorkflowParseError> ParseErrors,
+    IReadOnlyList<SuppressedFinding> SuppressedFindings)
+{
+    public ScanResult(IReadOnlyList<Finding> findings, IReadOnlyList<WorkflowParseError> parseErrors)
+        : this(findings, parseErrors, [])
+    {
+    }
+}
+
+public sealed record SuppressedFinding(
+    string RuleId,
+    string FilePath,
+    int? Line,
+    string SuppressionSource,
+    Severity Severity,
+    string Category,
+    string Message);
 
 public sealed record WorkflowParseError(
     string FilePath,

@@ -125,7 +125,7 @@ public sealed class CliApplication
         }
 
         var reporter = CreateReporter(options.Format);
-        output.Write(reporter.Render(result));
+        output.Write(reporter.Render(result, options.ShowSuppressions));
 
         if (result.ParseErrors.Count > 0)
         {
@@ -190,7 +190,8 @@ internal sealed record ParsedScanArguments(
     string? BaselinePath,
     bool BaselineSet,
     string? WriteBaselinePath,
-    bool PruneBaseline)
+    bool PruneBaseline,
+    bool ShowSuppressions)
 {
     public ScanOptions ToOptions(ScanConfig config)
     {
@@ -206,7 +207,8 @@ internal sealed record ParsedScanArguments(
             exclude,
             Strict ?? config.Strict ?? false,
             config.SeverityOverrides,
-            baseline);
+            baseline,
+            ShowSuppressions);
     }
 }
 
@@ -265,6 +267,7 @@ internal static class ScanArguments
         var baselineSet = false;
         string? writeBaselinePath = null;
         var pruneBaseline = false;
+        var showSuppressions = false;
 
         for (var index = 0; index < args.Count; index++)
         {
@@ -273,7 +276,7 @@ internal static class ScanArguments
             {
                 case "-h":
                 case "--help":
-                    return new ScanArgumentParse(CreateArguments(repo, workflowPath, outputFormat, failOn, failOnSet, include, includeSet, exclude, excludeSet, strict, configPath, baselinePath, baselineSet, writeBaselinePath, pruneBaseline), null);
+                    return new ScanArgumentParse(CreateArguments(repo, workflowPath, outputFormat, failOn, failOnSet, include, includeSet, exclude, excludeSet, strict, configPath, baselinePath, baselineSet, writeBaselinePath, pruneBaseline, showSuppressions), null);
                 case "--repo":
                     if (!TryReadValue(args, ref index, out repo))
                     {
@@ -364,16 +367,19 @@ internal static class ScanArguments
                 case "--prune-baseline":
                     pruneBaseline = true;
                     break;
+                case "--show-suppressions":
+                    showSuppressions = true;
+                    break;
                 default:
                     return Error($"Unknown option: {arg}");
             }
         }
 
-        return new ScanArgumentParse(CreateArguments(repo, workflowPath, outputFormat, failOn, failOnSet, include, includeSet, exclude, excludeSet, strict, configPath, baselinePath, baselineSet, writeBaselinePath, pruneBaseline), null);
+        return new ScanArgumentParse(CreateArguments(repo, workflowPath, outputFormat, failOn, failOnSet, include, includeSet, exclude, excludeSet, strict, configPath, baselinePath, baselineSet, writeBaselinePath, pruneBaseline, showSuppressions), null);
     }
 
     private static ScanArgumentParse Error(string error) =>
-        new(CreateArguments(".", null, null, null, false, new HashSet<string>(), false, new HashSet<string>(), false, null, null, null, false, null, false), error);
+        new(CreateArguments(".", null, null, null, false, new HashSet<string>(), false, new HashSet<string>(), false, null, null, null, false, null, false, false), error);
 
     private static ParsedScanArguments CreateArguments(
         string repositoryPath,
@@ -390,8 +396,9 @@ internal static class ScanArguments
         string? baselinePath,
         bool baselineSet,
         string? writeBaselinePath,
-        bool pruneBaseline) =>
-        new(repositoryPath, workflowPath, format, failOn, failOnSet, include, includeSet, exclude, excludeSet, strict, configPath, baselinePath, baselineSet, writeBaselinePath, pruneBaseline);
+        bool pruneBaseline,
+        bool showSuppressions) =>
+        new(repositoryPath, workflowPath, format, failOn, failOnSet, include, includeSet, exclude, excludeSet, strict, configPath, baselinePath, baselineSet, writeBaselinePath, pruneBaseline, showSuppressions);
 
     private static bool TryReadValue(IReadOnlyList<string> args, ref int index, out string value)
     {

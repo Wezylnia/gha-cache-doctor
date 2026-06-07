@@ -83,6 +83,21 @@ public sealed record InlineSuppressions(
         return false;
     }
 
+    public string GetSuppressionSource(Finding finding)
+    {
+        if (DisableFile.Contains(finding.RuleId))
+        {
+            return "inline-file";
+        }
+
+        if (finding.Line is { } line && DisableNextLine.TryGetValue(line, out var ruleIds) && ruleIds.Contains(finding.RuleId))
+        {
+            return "inline-next-line";
+        }
+
+        return "unknown";
+    }
+
     public static InlineSuppressions Empty { get; } = new(
         new Dictionary<int, HashSet<string>>(),
         new HashSet<string>(StringComparer.OrdinalIgnoreCase));

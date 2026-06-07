@@ -60,6 +60,7 @@ public sealed class WorkflowScanner
                 {
                     if (inlineSuppressions.IsSuppressed(finding))
                     {
+                        var source = inlineSuppressions.GetSuppressionSource(finding);
                         suppressedFindings.Add(finding);
                     }
                     else
@@ -75,7 +76,10 @@ public sealed class WorkflowScanner
                 .ThenBy(finding => finding.Line ?? int.MaxValue)
                 .ThenBy(finding => finding.RuleId, StringComparer.Ordinal)
                 .ToArray(),
-            parseErrors.ToArray());
+            parseErrors.ToArray(),
+            suppressedFindings
+                .Select(f => new SuppressedFinding(f.RuleId, f.FilePath, f.Line, "inline", f.Severity, f.Category, f.Message))
+                .ToArray());
     }
 
     private static bool IsSelected(IRule rule, ScanOptions options)

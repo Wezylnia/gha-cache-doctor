@@ -59,4 +59,36 @@ public sealed class TextReporter : IReporter
 
         return writer.ToString();
     }
+
+    public string Render(ScanResult result, bool showSuppressions)
+    {
+        var output = Render(result);
+        if (!showSuppressions || result.SuppressedFindings.Count == 0)
+        {
+            return output;
+        }
+
+        var writer = new StringWriter();
+        writer.Write(output);
+        writer.WriteLine("Suppressed findings:");
+        writer.WriteLine();
+
+        foreach (var group in result.SuppressedFindings.GroupBy(s => s.FilePath).OrderBy(g => g.Key, StringComparer.OrdinalIgnoreCase))
+        {
+            writer.WriteLine(group.Key);
+            foreach (var sf in group)
+            {
+                writer.WriteLine($"  [{sf.Severity.ToString().ToLowerInvariant()}] {sf.RuleId} ({sf.SuppressionSource})");
+                if (sf.Line is not null)
+                {
+                    writer.WriteLine($"  Line: {sf.Line}");
+                }
+
+                writer.WriteLine($"  {sf.Message}");
+                writer.WriteLine();
+            }
+        }
+
+        return writer.ToString();
+    }
 }
