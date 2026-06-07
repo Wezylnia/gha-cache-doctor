@@ -44,7 +44,7 @@ public sealed class WorkflowScanner
             try
             {
                 var content = File.ReadAllText(workflowFile);
-                inlineSuppressions = InlineSuppressionParser.Parse(workflowFile, content);
+                inlineSuppressions = InlineSuppressionParser.Parse(content);
             }
             catch
             {

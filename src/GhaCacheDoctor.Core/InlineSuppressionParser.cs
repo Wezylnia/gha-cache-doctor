@@ -7,7 +7,7 @@ public static class InlineSuppressionParser
     private const string DisableNextLinePrefix = "gha-cache-doctor-disable-next-line";
     private const string DisableFilePrefix = "gha-cache-doctor-disable-file";
 
-    public static InlineSuppressions Parse(string filePath, string content)
+    public static InlineSuppressions Parse(string content)
     {
         var disableNextLine = new Dictionary<int, HashSet<string>>();
         var disableFile = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
