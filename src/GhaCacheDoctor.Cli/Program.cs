@@ -69,6 +69,34 @@ public sealed class CliApplication
             GitHubActionsRules.CreateDefault());
         var result = scanner.Scan(options);
 
+        // Prune baseline (before suppression)
+        if (parse.Arguments.PruneBaseline)
+        {
+            if (string.IsNullOrWhiteSpace(options.BaselinePath) || options.BaselinePath.Equals("none", StringComparison.OrdinalIgnoreCase))
+            {
+                error.WriteLine("--prune-baseline requires a baseline file path via --baseline or config.");
+                return 2;
+            }
+
+            try
+            {
+                var resolvedBaselinePath = Path.GetFullPath(Path.IsPathRooted(options.BaselinePath)
+                    ? options.BaselinePath
+                    : Path.Combine(options.RepositoryPath, options.BaselinePath));
+                BaselineSuppressor.Prune(result, resolvedBaselinePath);
+            }
+            catch (FileNotFoundException ex)
+            {
+                error.WriteLine($"Baseline file not found: {ex.Message}");
+                return 2;
+            }
+            catch (Exception ex)
+            {
+                error.WriteLine($"Prune failed: {ex.Message}");
+                return 2;
+            }
+        }
+
         // Apply baseline suppression
         if (options.BaselinePath is not null && !options.BaselinePath.Equals("none", StringComparison.OrdinalIgnoreCase))
         {
@@ -161,7 +189,8 @@ internal sealed record ParsedScanArguments(
     string? ConfigPath,
     string? BaselinePath,
     bool BaselineSet,
-    string? WriteBaselinePath)
+    string? WriteBaselinePath,
+    bool PruneBaseline)
 {
     public ScanOptions ToOptions(ScanConfig config)
     {
@@ -235,6 +264,7 @@ internal static class ScanArguments
         string? baselinePath = null;
         var baselineSet = false;
         string? writeBaselinePath = null;
+        var pruneBaseline = false;
 
         for (var index = 0; index < args.Count; index++)
         {
@@ -243,7 +273,7 @@ internal static class ScanArguments
             {
                 case "-h":
                 case "--help":
-                    return new ScanArgumentParse(CreateArguments(repo, workflowPath, outputFormat, failOn, failOnSet, include, includeSet, exclude, excludeSet, strict, configPath, baselinePath, baselineSet, writeBaselinePath), null);
+                    return new ScanArgumentParse(CreateArguments(repo, workflowPath, outputFormat, failOn, failOnSet, include, includeSet, exclude, excludeSet, strict, configPath, baselinePath, baselineSet, writeBaselinePath, pruneBaseline), null);
                 case "--repo":
                     if (!TryReadValue(args, ref index, out repo))
                     {
@@ -331,16 +361,19 @@ internal static class ScanArguments
                     }
 
                     break;
+                case "--prune-baseline":
+                    pruneBaseline = true;
+                    break;
                 default:
                     return Error($"Unknown option: {arg}");
             }
         }
 
-        return new ScanArgumentParse(CreateArguments(repo, workflowPath, outputFormat, failOn, failOnSet, include, includeSet, exclude, excludeSet, strict, configPath, baselinePath, baselineSet, writeBaselinePath), null);
+        return new ScanArgumentParse(CreateArguments(repo, workflowPath, outputFormat, failOn, failOnSet, include, includeSet, exclude, excludeSet, strict, configPath, baselinePath, baselineSet, writeBaselinePath, pruneBaseline), null);
     }
 
     private static ScanArgumentParse Error(string error) =>
-        new(CreateArguments(".", null, null, null, false, new HashSet<string>(), false, new HashSet<string>(), false, null, null, null, false, null), error);
+        new(CreateArguments(".", null, null, null, false, new HashSet<string>(), false, new HashSet<string>(), false, null, null, null, false, null, false), error);
 
     private static ParsedScanArguments CreateArguments(
         string repositoryPath,
@@ -356,8 +389,9 @@ internal static class ScanArguments
         string? configPath,
         string? baselinePath,
         bool baselineSet,
-        string? writeBaselinePath) =>
-        new(repositoryPath, workflowPath, format, failOn, failOnSet, include, includeSet, exclude, excludeSet, strict, configPath, baselinePath, baselineSet, writeBaselinePath);
+        string? writeBaselinePath,
+        bool pruneBaseline) =>
+        new(repositoryPath, workflowPath, format, failOn, failOnSet, include, includeSet, exclude, excludeSet, strict, configPath, baselinePath, baselineSet, writeBaselinePath, pruneBaseline);
 
     private static bool TryReadValue(IReadOnlyList<string> args, ref int index, out string value)
     {

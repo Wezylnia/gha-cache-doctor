@@ -122,4 +122,22 @@ public static class BaselineSuppressor
 
         return new ScanResult(remainingFindings, result.ParseErrors);
     }
+
+    public static void Prune(ScanResult result, string baselinePath)
+    {
+        var baseline = BaselineDocument.Load(baselinePath);
+        var entries = baseline.Findings ?? [];
+
+        // Create backup
+        var backupPath = baselinePath + ".bak";
+        File.Copy(baselinePath, backupPath, overwrite: true);
+
+        // Keep only entries that still match current findings
+        var pruned = entries
+            .Where(entry => result.Findings.Any(f => entry.Matches(f)))
+            .ToList();
+
+        var prunedDocument = new BaselineDocument(baseline.Version, pruned);
+        prunedDocument.Save(baselinePath);
+    }
 }

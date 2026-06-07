@@ -686,6 +686,98 @@ public sealed class CliApplicationTests
     }
 
     [Fact]
+    public void PruneBaselineRemovesStaleEntries()
+    {
+        using var directory = new TempDirectory();
+        directory.Write(
+            ".github/workflows/ci.yml",
+            """
+            jobs:
+              test:
+                steps:
+                  - uses: actions/cache@v4
+                    with:
+                      path: ~/.npm
+                      key: npm-cache
+            """);
+        // Baseline with a stale entry (GHA-CACHE005 which won't fire for this workflow)
+        directory.Write(
+            ".gha-cache-doctor-baseline.json",
+            """
+            {
+              "version": 1,
+              "findings": [
+                {
+                  "ruleId": "GHA-CACHE005",
+                  "filePath": ".github/workflows/ci.yml",
+                  "jobId": "test",
+                  "stepName": null,
+                  "message": "Stale message that will not match."
+                }
+              ]
+            }
+            """);
+
+        var error = new StringWriter();
+        var exitCode = new CliApplication(new StringWriter(), error).Run(["scan", "--repo", directory.Path, "--baseline", ".gha-cache-doctor-baseline.json", "--prune-baseline", "--fail-on", "none"]);
+
+        Assert.Equal(0, exitCode);
+        Assert.Empty(error.ToString());
+        var content = File.ReadAllText(System.IO.Path.Combine(directory.Path, ".gha-cache-doctor-baseline.json"));
+        Assert.DoesNotContain("Stale message", content);
+        Assert.True(File.Exists(System.IO.Path.Combine(directory.Path, ".gha-cache-doctor-baseline.json.bak")));
+    }
+
+    [Fact]
+    public void PruneBaselineCreatesBackup()
+    {
+        using var directory = new TempDirectory();
+        directory.Write(
+            ".github/workflows/ci.yml",
+            """
+            jobs:
+              test:
+                steps:
+                  - uses: actions/cache@v4
+                    with:
+                      path: ~/.npm
+                      key: npm-cache
+            """);
+        directory.Write(
+            ".gha-cache-doctor-baseline.json",
+            """
+            { "version": 1, "findings": [] }
+            """);
+
+        var exitCode = new CliApplication(new StringWriter(), new StringWriter()).Run(["scan", "--repo", directory.Path, "--baseline", ".gha-cache-doctor-baseline.json", "--prune-baseline", "--fail-on", "none"]);
+
+        Assert.Equal(0, exitCode);
+        Assert.True(File.Exists(System.IO.Path.Combine(directory.Path, ".gha-cache-doctor-baseline.json.bak")));
+    }
+
+    [Fact]
+    public void PruneBaselineWithoutBaselineReturnsUsageError()
+    {
+        using var directory = new TempDirectory();
+        directory.Write(
+            ".github/workflows/ci.yml",
+            """
+            jobs:
+              test:
+                steps:
+                  - uses: actions/cache@v4
+                    with:
+                      path: ~/.npm
+                      key: npm-cache
+            """);
+
+        var error = new StringWriter();
+        var exitCode = new CliApplication(new StringWriter(), error).Run(["scan", "--repo", directory.Path, "--prune-baseline", "--fail-on", "none"]);
+
+        Assert.Equal(2, exitCode);
+    }
+
+    [Fact]
     public void InlineSuppressionDisableNextLineWorks()
     {
         using var directory = new TempDirectory();
