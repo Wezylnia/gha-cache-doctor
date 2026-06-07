@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 
 namespace GhaCacheDoctor.Core;
@@ -45,17 +47,42 @@ public sealed record BaselineEntry(
     string FilePath,
     string? JobId,
     string? StepName,
-    string Message)
+    string Message,
+    string? Fingerprint = null)
 {
     public static BaselineEntry FromFinding(Finding finding) =>
-        new(finding.RuleId, NormalizePath(finding.FilePath), finding.JobId, finding.StepName, finding.Message);
+        new(finding.RuleId, NormalizePath(finding.FilePath), finding.JobId, finding.StepName, finding.Message,
+            ComputeFingerprint(finding));
 
-    public bool Matches(Finding finding) =>
-        RuleId.Equals(finding.RuleId, StringComparison.OrdinalIgnoreCase) &&
-        PathsMatch(FilePath, finding.FilePath) &&
-        (JobId ?? "") == (finding.JobId ?? "") &&
-        (StepName ?? "") == (finding.StepName ?? "") &&
-        Message.Equals(finding.Message, StringComparison.Ordinal);
+    public bool Matches(Finding finding)
+    {
+        // If this entry has a fingerprint, match by fingerprint only
+        if (!string.IsNullOrWhiteSpace(Fingerprint))
+        {
+            return Fingerprint.Equals(ComputeFingerprint(finding), StringComparison.Ordinal);
+        }
+
+        // Legacy matching for entries without fingerprint
+        return RuleId.Equals(finding.RuleId, StringComparison.OrdinalIgnoreCase) &&
+            PathsMatch(FilePath, finding.FilePath) &&
+            (JobId ?? "") == (finding.JobId ?? "") &&
+            (StepName ?? "") == (finding.StepName ?? "") &&
+            Message.Equals(finding.Message, StringComparison.Ordinal);
+    }
+
+    public static string ComputeFingerprint(Finding finding)
+    {
+        var input = string.Join("|",
+            finding.RuleId.ToLowerInvariant(),
+            NormalizePath(finding.FilePath),
+            (finding.JobId ?? "").ToLowerInvariant(),
+            (finding.StepName ?? "").ToLowerInvariant(),
+            finding.Category.ToLowerInvariant(),
+            finding.Message.ToLowerInvariant());
+
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(input));
+        return Convert.ToHexStringLower(hash);
+    }
 
     private static bool PathsMatch(string baselinePath, string findingPath)
     {

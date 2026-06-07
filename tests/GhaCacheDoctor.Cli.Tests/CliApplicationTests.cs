@@ -594,6 +594,98 @@ public sealed class CliApplicationTests
     }
 
     [Fact]
+    public void WriteBaselineIncludesFingerprint()
+    {
+        using var directory = new TempDirectory();
+        directory.Write("package-lock.json", "{}");
+        directory.Write(
+            ".github/workflows/ci.yml",
+            """
+            jobs:
+              test:
+                steps:
+                  - uses: actions/setup-node@v4
+                  - run: npm ci
+            """);
+
+        var exitCode = new CliApplication(new StringWriter(), new StringWriter()).Run(["scan", "--repo", directory.Path, "--write-baseline", "out.json", "--fail-on", "none"]);
+
+        Assert.Equal(0, exitCode);
+        var content = File.ReadAllText(System.IO.Path.Combine(directory.Path, "out.json"));
+        Assert.Contains("\"fingerprint\":", content);
+    }
+
+    [Fact]
+    public void BaselineWithFingerprintSuppresses()
+    {
+        using var directory = new TempDirectory();
+        directory.Write("package-lock.json", "{}");
+        directory.Write(
+            ".github/workflows/ci.yml",
+            """
+            jobs:
+              test:
+                steps:
+                  - uses: actions/setup-node@v4
+                  - run: npm ci
+            """);
+        // First write a baseline with fingerprints
+        new CliApplication(new StringWriter(), new StringWriter()).Run(["scan", "--repo", directory.Path, "--write-baseline", ".gha-cache-doctor-baseline.json", "--fail-on", "none"]);
+        var output = new StringWriter();
+
+        var exitCode = new CliApplication(output, new StringWriter()).Run(["scan", "--repo", directory.Path, "--baseline", ".gha-cache-doctor-baseline.json", "--fail-on", "info"]);
+
+        Assert.Equal(0, exitCode);
+        Assert.DoesNotContain("GHA-CACHE001", output.ToString());
+    }
+
+    [Fact]
+    public void BaselineWithoutFingerprintStillSuppresses()
+    {
+        using var directory = new TempDirectory();
+        directory.Write("package-lock.json", "{}");
+        directory.Write(
+            ".github/workflows/ci.yml",
+            """
+            jobs:
+              test:
+                steps:
+                  - uses: actions/setup-node@v4
+                  - run: npm ci
+            """);
+        // Legacy baseline without fingerprint
+        directory.Write(
+            ".gha-cache-doctor-baseline.json",
+            """
+            {
+              "version": 1,
+              "findings": [
+                {
+                  "ruleId": "GHA-CACHE001",
+                  "filePath": ".github/workflows/ci.yml",
+                  "jobId": "test",
+                  "stepName": null,
+                  "message": "actions/setup-node is used without dependency caching."
+                },
+                {
+                  "ruleId": "GHA-CACHE005",
+                  "filePath": ".github/workflows/ci.yml",
+                  "jobId": "test",
+                  "stepName": null,
+                  "message": "This job installs dependencies but does not configure a matching dependency cache."
+                }
+              ]
+            }
+            """);
+        var output = new StringWriter();
+
+        var exitCode = new CliApplication(output, new StringWriter()).Run(["scan", "--repo", directory.Path, "--baseline", ".gha-cache-doctor-baseline.json", "--fail-on", "info"]);
+
+        Assert.Equal(0, exitCode);
+        Assert.DoesNotContain("GHA-CACHE001", output.ToString());
+    }
+
+    [Fact]
     public void InlineSuppressionDisableNextLineWorks()
     {
         using var directory = new TempDirectory();
