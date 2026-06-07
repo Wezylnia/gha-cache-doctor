@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The project follows preview releases until the first stable `1.0.0`.
 
+## 0.7.0 - 2026-06-07
+
+### Added
+
+- Baseline file support via `--baseline <path>` and `baseline` config field.
+- Baseline generation via `--write-baseline <path>`.
+- Inline suppression comments: `# gha-cache-doctor-disable-next-line` and `# gha-cache-doctor-disable-file`.
+
+### Changed
+
+- Package version updated to `0.7.0`.
+
 ## 0.6.0 - 2026-06-07
 
 ### Added

@@ -68,7 +68,7 @@ Focus: monorepo and package-manager precision.
 - Strengthen `setup-node` dependency-path recommendations.
 - Add Poetry and Pipenv cache coverage.
 
-## v0.7.0
+## v0.7.0 - shipped
 
 Focus: adoption controls.
 

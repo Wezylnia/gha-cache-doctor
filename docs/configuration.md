@@ -32,5 +32,6 @@ severity:
 | `exclude` | Rule IDs to skip. May be a YAML list or comma-separated string. |
 | `disabledRules` | Alias for `exclude`. |
 | `severity` or `severityOverrides` | Mapping of rule IDs to `info`, `warning`, or `error`. |
+| `baseline` | Path to a baseline JSON file for suppressing known findings. |
 
 CLI options take precedence over config values. For example, `--exclude GHA-CACHE003` overrides a configured `exclude` list for that scan.
