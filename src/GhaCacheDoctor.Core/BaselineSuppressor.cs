@@ -1,0 +1,98 @@
+using System.Text.Json;
+
+namespace GhaCacheDoctor.Core;
+
+public sealed record BaselineDocument(
+    int Version,
+    List<BaselineEntry> Findings)
+{
+    private static readonly JsonSerializerOptions Options = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
+    public static BaselineDocument Load(string path)
+    {
+        if (!File.Exists(path))
+        {
+            throw new FileNotFoundException($"Baseline file not found: {path}");
+        }
+
+        var json = File.ReadAllText(path);
+        var document = JsonSerializer.Deserialize<BaselineDocument>(json, Options);
+        return document ?? new BaselineDocument(1, []);
+    }
+
+    public void Save(string path)
+    {
+        var directory = Path.GetDirectoryName(Path.GetFullPath(path));
+        if (directory is not null && !Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        var json = JsonSerializer.Serialize(this, Options);
+        File.WriteAllText(path, json);
+    }
+
+    public static BaselineDocument FromFindings(IReadOnlyList<Finding> findings) =>
+        new(1, findings.Select(BaselineEntry.FromFinding).ToList());
+}
+
+public sealed record BaselineEntry(
+    string RuleId,
+    string FilePath,
+    string? JobId,
+    string? StepName,
+    string Message)
+{
+    public static BaselineEntry FromFinding(Finding finding) =>
+        new(finding.RuleId, NormalizePath(finding.FilePath), finding.JobId, finding.StepName, finding.Message);
+
+    public bool Matches(Finding finding) =>
+        RuleId.Equals(finding.RuleId, StringComparison.OrdinalIgnoreCase) &&
+        PathsMatch(FilePath, finding.FilePath) &&
+        (JobId ?? "") == (finding.JobId ?? "") &&
+        (StepName ?? "") == (finding.StepName ?? "") &&
+        Message.Equals(finding.Message, StringComparison.Ordinal);
+
+    private static bool PathsMatch(string baselinePath, string findingPath)
+    {
+        var normalizedBaseline = NormalizePath(baselinePath);
+        var normalizedFinding = NormalizePath(findingPath);
+
+        if (normalizedBaseline.Equals(normalizedFinding, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        // Allow relative baseline path to match absolute finding path
+        return normalizedFinding.EndsWith("/" + normalizedBaseline, StringComparison.OrdinalIgnoreCase) ||
+               normalizedFinding.EndsWith("\\" + normalizedBaseline.Replace('/', '\\'), StringComparison.OrdinalIgnoreCase);
+    }
+
+    public static string NormalizePath(string path) => path.Replace('\\', '/');
+}
+
+public static class BaselineSuppressor
+{
+    public static ScanResult Apply(ScanResult result, string baselinePath)
+    {
+        var baseline = BaselineDocument.Load(baselinePath);
+        var entries = baseline.Findings ?? [];
+
+        var remainingFindings = new List<Finding>();
+        foreach (var finding in result.Findings)
+        {
+            if (entries.Any(entry => entry.Matches(finding)))
+            {
+                continue;
+            }
+
+            remainingFindings.Add(finding);
+        }
+
+        return new ScanResult(remainingFindings, result.ParseErrors);
+    }
+}

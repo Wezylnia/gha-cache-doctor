@@ -23,6 +23,7 @@ public sealed class WorkflowScanner
         var findings = new List<Finding>();
         var parseErrors = new List<WorkflowParseError>();
         var selectedRules = rules.Where(rule => IsSelected(rule, options)).ToArray();
+        var suppressedFindings = new List<Finding>();
 
         foreach (var workflowFile in workflowFiles)
         {
@@ -38,10 +39,34 @@ public sealed class WorkflowScanner
                 continue;
             }
 
+            // Parse inline suppressions from the raw file
+            InlineSuppressions inlineSuppressions;
+            try
+            {
+                var content = File.ReadAllText(workflowFile);
+                inlineSuppressions = InlineSuppressionParser.Parse(workflowFile, content);
+            }
+            catch
+            {
+                inlineSuppressions = InlineSuppressions.Empty;
+            }
+
             foreach (var rule in selectedRules)
             {
-                findings.AddRange(rule.Analyze(parseResult.Workflow, repository, options.Strict)
-                    .Select(finding => ApplySeverityOverride(finding, options)));
+                var ruleFindings = rule.Analyze(parseResult.Workflow, repository, options.Strict)
+                    .Select(finding => ApplySeverityOverride(finding, options));
+
+                foreach (var finding in ruleFindings)
+                {
+                    if (inlineSuppressions.IsSuppressed(finding))
+                    {
+                        suppressedFindings.Add(finding);
+                    }
+                    else
+                    {
+                        findings.Add(finding);
+                    }
+                }
             }
         }
 

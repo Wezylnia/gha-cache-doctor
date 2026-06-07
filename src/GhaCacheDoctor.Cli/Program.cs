@@ -68,6 +68,34 @@ public sealed class CliApplication
             new RepositoryContextBuilder(),
             GitHubActionsRules.CreateDefault());
         var result = scanner.Scan(options);
+
+        // Apply baseline suppression
+        if (options.BaselinePath is not null && !options.BaselinePath.Equals("none", StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                var resolvedBaselinePath = Path.GetFullPath(Path.IsPathRooted(options.BaselinePath)
+                    ? options.BaselinePath
+                    : Path.Combine(options.RepositoryPath, options.BaselinePath));
+                result = BaselineSuppressor.Apply(result, resolvedBaselinePath);
+            }
+            catch (FileNotFoundException ex)
+            {
+                error.WriteLine($"Baseline file not found: {ex.Message}");
+                return 2;
+            }
+        }
+
+        // Write baseline
+        if (parse.Arguments.WriteBaselinePath is not null)
+        {
+            var resolvedWritePath = Path.GetFullPath(Path.IsPathRooted(parse.Arguments.WriteBaselinePath)
+                ? parse.Arguments.WriteBaselinePath
+                : Path.Combine(options.RepositoryPath, parse.Arguments.WriteBaselinePath));
+            var baseline = BaselineDocument.FromFindings(result.Findings);
+            baseline.Save(resolvedWritePath);
+        }
+
         var reporter = CreateReporter(options.Format);
         output.Write(reporter.Render(result));
 
@@ -110,6 +138,8 @@ public sealed class CliApplication
           --exclude <ids>           Comma-separated rule IDs to exclude.
           --strict                  Enable stricter rule behavior.
           --config <path|none>      Config file. Defaults to .gha-cache-doctor.yml if present.
+          --baseline <path|none>    Baseline file for suppressing known findings.
+          --write-baseline <path>   Write current findings to a baseline file.
           -h, --help                Show help.
 
         """;
@@ -128,12 +158,16 @@ internal sealed record ParsedScanArguments(
     IReadOnlySet<string> ExcludeRuleIds,
     bool ExcludeSet,
     bool? Strict,
-    string? ConfigPath)
+    string? ConfigPath,
+    string? BaselinePath,
+    bool BaselineSet,
+    string? WriteBaselinePath)
 {
     public ScanOptions ToOptions(ScanConfig config)
     {
         var include = IncludeSet ? IncludeRuleIds : config.IncludeRuleIds;
         var exclude = ExcludeSet ? ExcludeRuleIds : config.ExcludeRuleIds;
+        var baseline = BaselineSet ? BaselinePath : config.BaselinePath;
         return new ScanOptions(
             RepositoryPath,
             WorkflowPath ?? config.WorkflowPath ?? ".github/workflows",
@@ -142,7 +176,8 @@ internal sealed record ParsedScanArguments(
             include,
             exclude,
             Strict ?? config.Strict ?? false,
-            config.SeverityOverrides);
+            config.SeverityOverrides,
+            baseline);
     }
 }
 
@@ -197,6 +232,9 @@ internal static class ScanArguments
         string? configPath = null;
         string? workflowPath = null;
         OutputFormat? outputFormat = null;
+        string? baselinePath = null;
+        var baselineSet = false;
+        string? writeBaselinePath = null;
 
         for (var index = 0; index < args.Count; index++)
         {
@@ -205,7 +243,7 @@ internal static class ScanArguments
             {
                 case "-h":
                 case "--help":
-                    return new ScanArgumentParse(CreateArguments(repo, workflowPath, outputFormat, failOn, failOnSet, include, includeSet, exclude, excludeSet, strict, configPath), null);
+                    return new ScanArgumentParse(CreateArguments(repo, workflowPath, outputFormat, failOn, failOnSet, include, includeSet, exclude, excludeSet, strict, configPath, baselinePath, baselineSet, writeBaselinePath), null);
                 case "--repo":
                     if (!TryReadValue(args, ref index, out repo))
                     {
@@ -278,16 +316,31 @@ internal static class ScanArguments
                     }
 
                     break;
+                case "--baseline":
+                    if (!TryReadValue(args, ref index, out baselinePath))
+                    {
+                        return Error("--baseline requires a file path or none.");
+                    }
+
+                    baselineSet = true;
+                    break;
+                case "--write-baseline":
+                    if (!TryReadValue(args, ref index, out writeBaselinePath))
+                    {
+                        return Error("--write-baseline requires a file path.");
+                    }
+
+                    break;
                 default:
                     return Error($"Unknown option: {arg}");
             }
         }
 
-        return new ScanArgumentParse(CreateArguments(repo, workflowPath, outputFormat, failOn, failOnSet, include, includeSet, exclude, excludeSet, strict, configPath), null);
+        return new ScanArgumentParse(CreateArguments(repo, workflowPath, outputFormat, failOn, failOnSet, include, includeSet, exclude, excludeSet, strict, configPath, baselinePath, baselineSet, writeBaselinePath), null);
     }
 
     private static ScanArgumentParse Error(string error) =>
-        new(CreateArguments(".", null, null, null, false, new HashSet<string>(), false, new HashSet<string>(), false, null, null), error);
+        new(CreateArguments(".", null, null, null, false, new HashSet<string>(), false, new HashSet<string>(), false, null, null, null, false, null), error);
 
     private static ParsedScanArguments CreateArguments(
         string repositoryPath,
@@ -300,8 +353,11 @@ internal static class ScanArguments
         IReadOnlySet<string> exclude,
         bool excludeSet,
         bool? strict,
-        string? configPath) =>
-        new(repositoryPath, workflowPath, format, failOn, failOnSet, include, includeSet, exclude, excludeSet, strict, configPath);
+        string? configPath,
+        string? baselinePath,
+        bool baselineSet,
+        string? writeBaselinePath) =>
+        new(repositoryPath, workflowPath, format, failOn, failOnSet, include, includeSet, exclude, excludeSet, strict, configPath, baselinePath, baselineSet, writeBaselinePath);
 
     private static bool TryReadValue(IReadOnlyList<string> args, ref int index, out string value)
     {
@@ -334,7 +390,8 @@ internal sealed record ScanConfig(
     IReadOnlySet<string> IncludeRuleIds,
     IReadOnlySet<string> ExcludeRuleIds,
     bool? Strict,
-    IReadOnlyDictionary<string, Severity> SeverityOverrides)
+    IReadOnlyDictionary<string, Severity> SeverityOverrides,
+    string? BaselinePath)
 {
     public static ScanConfig Empty { get; } = new(
         null,
@@ -343,7 +400,8 @@ internal sealed record ScanConfig(
         new HashSet<string>(StringComparer.OrdinalIgnoreCase),
         new HashSet<string>(StringComparer.OrdinalIgnoreCase),
         null,
-        new Dictionary<string, Severity>(StringComparer.OrdinalIgnoreCase));
+        new Dictionary<string, Severity>(StringComparer.OrdinalIgnoreCase),
+        null);
 }
 
 internal static class ScanConfigLoader
@@ -411,6 +469,7 @@ internal static class ScanConfigLoader
         var include = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var exclude = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var severity = new Dictionary<string, Severity>(StringComparer.OrdinalIgnoreCase);
+        string? baselinePath = null;
 
         foreach (var entry in root.Children)
         {
@@ -442,10 +501,13 @@ internal static class ScanConfigLoader
                 case "severityOverrides":
                     AddSeverityOverrides(severity, entry.Value);
                     break;
+                case "baseline":
+                    baselinePath = Scalar(entry.Value);
+                    break;
             }
         }
 
-        return new ScanConfig(workflowPath, format, failOn, include, exclude, strict, severity);
+        return new ScanConfig(workflowPath, format, failOn, include, exclude, strict, severity, baselinePath);
     }
 
     private static string Scalar(YamlNode node) =>
