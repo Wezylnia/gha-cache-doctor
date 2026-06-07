@@ -91,6 +91,42 @@ public sealed class RepositoryContextBuilderTests
         Assert.Contains("pnpm-workspace.yaml", context.PnpmWorkspaceFiles);
         Assert.True(context.LooksLikeNodeMonorepo);
     }
+
+    [Fact]
+    public void BuildDetectsYarnRcAndCache()
+    {
+        using var directory = new TempDirectory();
+        directory.Write(".yarnrc.yml", "nodeLinker: node-modules");
+        directory.Write(".yarn/cache/some-package.zip", string.Empty);
+
+        var context = new RepositoryContextBuilder().Build(directory.Path);
+
+        Assert.Contains(".yarnrc.yml", context.YarnRcFiles);
+        Assert.True(context.HasYarnCacheDirectory);
+    }
+
+    [Fact]
+    public void BuildDetectsDirectoryPackagesProps()
+    {
+        using var directory = new TempDirectory();
+        directory.Write("Directory.Packages.props", "<Project />");
+
+        var context = new RepositoryContextBuilder().Build(directory.Path);
+
+        Assert.Contains("Directory.Packages.props", context.DirectoryPackagesPropsFiles);
+    }
+
+    [Fact]
+    public void BuildDetectsYarnRcAsMonorepoHint()
+    {
+        using var directory = new TempDirectory();
+        directory.Write(".yarnrc.yml", "nodeLinker: node-modules");
+        directory.Write("package.json", "{}");
+
+        var context = new RepositoryContextBuilder().Build(directory.Path);
+
+        Assert.True(context.LooksLikeNodeMonorepo);
+    }
 }
 
 internal sealed class TempDirectory : IDisposable

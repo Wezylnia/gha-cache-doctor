@@ -75,11 +75,22 @@ public sealed record RepositoryContext(
 
     public bool LooksLikeNodeMonorepo =>
         PnpmWorkspaceFiles.Count > 0 ||
+        YarnRcFiles.Count > 0 ||
         PackageJsonFiles.Count > 1 ||
         LockFiles.Count(IsNodeLockFile) > 1 ||
         LockFiles.Any(path => IsNodeLockFile(path) && !IsRootPath(path)) ||
         LockFiles.Any(path => IsNodeLockFile(path) && (path.StartsWith("apps/", StringComparison.OrdinalIgnoreCase) ||
             path.StartsWith("packages/", StringComparison.OrdinalIgnoreCase)));
+
+    public IReadOnlyList<string> YarnRcFiles =>
+        Files.Where(path => Path.GetFileName(path).Equals(".yarnrc.yml", StringComparison.OrdinalIgnoreCase)).ToArray();
+
+    public bool HasYarnCacheDirectory =>
+        Files.Any(path => path.Contains("/.yarn/cache/", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith(".yarn/cache/", StringComparison.OrdinalIgnoreCase));
+
+    public IReadOnlyList<string> DirectoryPackagesPropsFiles =>
+        Files.Where(path => Path.GetFileName(path).Equals("Directory.Packages.props", StringComparison.OrdinalIgnoreCase)).ToArray();
 
     public static bool IsNodeLockFile(string path)
     {
