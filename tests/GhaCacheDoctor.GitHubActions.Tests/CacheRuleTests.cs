@@ -899,6 +899,159 @@ public sealed class CacheRuleTests
         Assert.Empty(findings);
     }
 
+    [Fact]
+    public void GoCacheMissingReportsSetupGoWithoutCache()
+    {
+        var workflow = Workflow([
+            new("Setup Go", "actions/setup-go@v5", null, new Dictionary<string, string>(), 5),
+            new("Test", null, "go test ./...", new Dictionary<string, string>(), 12)
+        ]);
+
+        var finding = Assert.Single(new GoCacheMissingRule().Analyze(workflow, Repository()));
+
+        Assert.Equal("GHA-CACHE011", finding.RuleId);
+        Assert.Contains("cache: true", finding.Recommendation);
+    }
+
+    [Fact]
+    public void GoCacheMissingAllowsSetupGoWithCache()
+    {
+        var workflow = Workflow([
+            new("Setup Go", "actions/setup-go@v5", null, new Dictionary<string, string> { ["cache"] = "true" }, 5),
+            new("Test", null, "go test ./...", new Dictionary<string, string>(), 12)
+        ]);
+
+        var findings = new GoCacheMissingRule().Analyze(workflow, Repository());
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public void GoCacheMissingAllowsManualGoCache()
+    {
+        var workflow = Workflow([
+            new("Cache Go", "actions/cache@v4", null, new Dictionary<string, string>
+            {
+                ["path"] = "~/go/pkg/mod\n~/.cache/go-build",
+                ["key"] = "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}"
+            }, 5),
+            new("Setup Go", "actions/setup-go@v5", null, new Dictionary<string, string>(), 8),
+            new("Test", null, "go test ./...", new Dictionary<string, string>(), 12)
+        ]);
+
+        var findings = new GoCacheMissingRule().Analyze(workflow, Repository());
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public void CargoCacheMissingReportsCargoTestWithoutCache()
+    {
+        var workflow = Workflow([
+            new("Test", null, "cargo test", new Dictionary<string, string>(), 12)
+        ]);
+
+        var finding = Assert.Single(new CargoCacheMissingRule().Analyze(workflow, Repository()));
+
+        Assert.Equal("GHA-CACHE012", finding.RuleId);
+    }
+
+    [Fact]
+    public void CargoCacheMissingAllowsRustCacheAction()
+    {
+        var workflow = Workflow([
+            new("Rust Cache", "Swatinem/rust-cache@v2", null, new Dictionary<string, string>(), 5),
+            new("Build", null, "cargo build --release", new Dictionary<string, string>(), 12)
+        ]);
+
+        var findings = new CargoCacheMissingRule().Analyze(workflow, Repository());
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public void CargoCacheMissingAllowsManualCargoCache()
+    {
+        var workflow = Workflow([
+            new("Cache Cargo", "actions/cache@v4", null, new Dictionary<string, string>
+            {
+                ["path"] = "~/.cargo/registry\n~/.cargo/git\ntarget",
+                ["key"] = "${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}"
+            }, 5),
+            new("Test", null, "cargo test", new Dictionary<string, string>(), 12)
+        ]);
+
+        var findings = new CargoCacheMissingRule().Analyze(workflow, Repository());
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public void CargoCacheMissingDoesNotReportVersion()
+    {
+        var workflow = Workflow([
+            new("Version", null, "cargo --version", new Dictionary<string, string>(), 12)
+        ]);
+
+        var findings = new CargoCacheMissingRule().Analyze(workflow, Repository());
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public void MavenCacheMissingReportsMvnTestWithoutCache()
+    {
+        var workflow = Workflow([
+            new("Test", null, "mvn test", new Dictionary<string, string>(), 12)
+        ]);
+
+        var finding = Assert.Single(new MavenCacheMissingRule().Analyze(workflow, Repository()));
+
+        Assert.Equal("GHA-CACHE013", finding.RuleId);
+    }
+
+    [Fact]
+    public void MavenCacheMissingReportsMvnwVerifyWithoutCache()
+    {
+        var workflow = Workflow([
+            new("Verify", null, "./mvnw verify", new Dictionary<string, string>(), 12)
+        ]);
+
+        var finding = Assert.Single(new MavenCacheMissingRule().Analyze(workflow, Repository()));
+
+        Assert.Equal("GHA-CACHE013", finding.RuleId);
+    }
+
+    [Fact]
+    public void MavenCacheMissingAllowsSetupJavaMavenCache()
+    {
+        var workflow = Workflow([
+            new("Setup Java", "actions/setup-java@v4", null, new Dictionary<string, string> { ["cache"] = "maven" }, 5),
+            new("Test", null, "mvn test", new Dictionary<string, string>(), 12)
+        ]);
+
+        var findings = new MavenCacheMissingRule().Analyze(workflow, Repository());
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public void MavenCacheMissingAllowsManualM2Cache()
+    {
+        var workflow = Workflow([
+            new("Cache Maven", "actions/cache@v4", null, new Dictionary<string, string>
+            {
+                ["path"] = "~/.m2/repository",
+                ["key"] = "${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}"
+            }, 5),
+            new("Test", null, "mvn test", new Dictionary<string, string>(), 12)
+        ]);
+
+        var findings = new MavenCacheMissingRule().Analyze(workflow, Repository());
+
+        Assert.Empty(findings);
+    }
+
     private static WorkflowDocument Workflow(IReadOnlyList<WorkflowStep> steps) =>
         new("ci.yml", "CI", [new WorkflowJob("test", null, steps)]);
 
